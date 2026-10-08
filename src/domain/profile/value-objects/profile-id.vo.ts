@@ -1,6 +1,6 @@
 import Id from "../../common/value-objects/id.vo";
 
-export class BaseServiceId extends Id<BaseServiceId> {
+export class ServiceTemplateId extends Id<ServiceTemplateId> {
 }
 
-export default BaseServiceId;
+export default ServiceTemplateId;

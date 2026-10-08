@@ -31,12 +31,12 @@ export class Application {
             await this.dbService.start();
             await this.grpcService.start();
             logger.info(
-                '🚀 BaseService service started',
+                '🚀 ServiceTemplate service started',
             );
         } catch (err) {
             logger.error(
                 {err},
-                '💥 Failed to start BaseService service',
+                '💥 Failed to start ServiceTemplate service',
             );
             process.exit(1);
         }

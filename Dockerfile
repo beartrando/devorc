@@ -14,10 +14,10 @@ COPY package.json ./
 COPY pnpm-workspace.yaml ./
 COPY tsconfig.base.json ./
 
-COPY services/base-service/package*.json ./services/base-service/
-COPY services/base-service/jest.config.js ./services/base-service/
-COPY services/base-service/tsconfig.json ./services/base-service/
-COPY services/base-service/src ./services/base-service/src/
+COPY services/service-template/package*.json ./services/service-template/
+COPY services/service-template/jest.config.js ./services/service-template/
+COPY services/service-template/tsconfig.json ./services/service-template/
+COPY services/service-template/src ./services/service-template/src/
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -36,8 +36,8 @@ FROM base AS deps
 RUN pnpm fetch
 RUN pnpm install --offline --frozen-lockfile --ignore-scripts
 
-RUN mkdir -p ./services/base-service/src/contracts/proto
-RUN pnpm --filter base-service proto:generate
+RUN mkdir -p ./services/service-template/src/contracts/proto
+RUN pnpm --filter service-template proto:generate
 
 RUN pnpm --filter @shared/logger build
 RUN pnpm --filter @shared/grpc-client-manager build
@@ -46,12 +46,12 @@ RUN pnpm --filter @shared/errors build
 RUN pnpm --filter @shared/kafka-manager build
 RUN pnpm --filter @shared/pg-boss-manager build
 
-RUN pnpm --filter base-service prisma:generate
+RUN pnpm --filter service-template prisma:generate
 
 # ---------- DEV ----------
 FROM deps AS dev
 
-COPY services/base-service/tsconfig.test.json ./services/base-service/
+COPY services/service-template/tsconfig.test.json ./services/service-template/
 
 ENV NODE_ENV=development
 
@@ -61,7 +61,7 @@ USER node
 
 EXPOSE 50051
 
-CMD ["pnpm", "--filter", "base-service", "dev"]
+CMD ["pnpm", "--filter", "service-template", "dev"]
 
 HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 \
   CMD nc -z localhost 50051 || exit 1
@@ -71,9 +71,9 @@ FROM deps AS build
 
 ENV NODE_ENV=production
 
-RUN pnpm --filter base-service build
+RUN pnpm --filter service-template build
 
-RUN pnpm --filter base-service deploy /deploy --prod
+RUN pnpm --filter service-template deploy /deploy --prod
 
 # ---------- PROD ----------
 FROM node:22-slim AS prod
@@ -121,6 +121,6 @@ RUN printf "%s\n" "$VERSION" > VERSION
 
 LABEL org.opencontainers.image.version="$VERSION"
 
-WORKDIR /usr/src/app/services/base-service
+WORKDIR /usr/src/app/services/service-template
 
-CMD ["pnpm", "--filter", "base-service", "migrate:deploy"]
+CMD ["pnpm", "--filter", "service-template", "migrate:deploy"]

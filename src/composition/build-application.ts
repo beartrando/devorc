@@ -12,11 +12,11 @@ import AuthService from "../infrastructure/auth/service";
 import MessageService from "../infrastructure/message/service";
 import JobService from "../infrastructure/job/service";
 import DbService from "../infrastructure/db/service";
-import PrismaBaseServiceRepository from "../infrastructure/db/repositories/prisma-base-service.repository";
-import GetOrCreateUseCase from "../application/use-cases/base-service/get-or-create";
-import GetByUserUseCase from "../application/use-cases/base-service/get-by-user";
-import BaseServiceHandler from "../infrastructure/grpc/handlers/base-service.handler";
-import GetUseCase from "../application/use-cases/base-service/get";
+import PrismaServiceTemplateRepository from "../infrastructure/db/repositories/prisma-service-template.repository";
+import GetOrCreateUseCase from "../application/use-cases/service-template/get-or-create";
+import GetByUserUseCase from "../application/use-cases/service-template/get-by-user";
+import ServiceTemplateHandler from "../infrastructure/grpc/handlers/service-template.handler";
+import GetUseCase from "../application/use-cases/service-template/get";
 import UserCreatedConsumer from "../infrastructure/message/consumers/user-created";
 import messageConfig from "../infrastructure/message/configs/message.config";
 import messageProducersConfig from "../infrastructure/message/configs/producers.config";
@@ -28,9 +28,9 @@ function buildApplication() {
     const jobService = new JobService(jobConfig, messageConfig, messageProducersConfig)
     const dbService = new DbService();
 
-    const base-serviceRepository = new PrismaBaseServiceRepository(dbService.client);
+    const service-templateRepository = new PrismaServiceTemplateRepository(dbService.client);
 
-    const getOrCreateUseCase = new GetOrCreateUseCase(base-serviceRepository, jobService, messageProducersConfig.base-serviceCreated);
+    const getOrCreateUseCase = new GetOrCreateUseCase(service-templateRepository, jobService, messageProducersConfig.service-templateCreated);
 
 
     const userCreatedConsumer = new UserCreatedConsumer(getOrCreateUseCase);
@@ -42,18 +42,18 @@ function buildApplication() {
         userCreatedConsumer.execute.bind(userCreatedConsumer)
     )
 
-    const getUseCase = new GetUseCase(base-serviceRepository);
-    const getByUserUseCase = new GetByUserUseCase(base-serviceRepository);
+    const getUseCase = new GetUseCase(service-templateRepository);
+    const getByUserUseCase = new GetByUserUseCase(service-templateRepository);
 
     const healthUseCase = new HealthUseCase(dbService, messageService, jobService);
     const statusUseCase = new StatusUseCase;
     const livezUseCase = new LivezUseCase;
     const readyzUseCase = new ReadyzUseCase;
 
-    const base-serviceHandler = new BaseServiceHandler(authService, getOrCreateUseCase, getByUserUseCase, getUseCase);
+    const service-templateHandler = new ServiceTemplateHandler(authService, getOrCreateUseCase, getByUserUseCase, getUseCase);
     const healthHandler = new HealthHandler(healthUseCase, statusUseCase, livezUseCase, readyzUseCase);
 
-    const grpcService = new GrpcService(grpcConfig.port, base-serviceHandler, healthHandler);
+    const grpcService = new GrpcService(grpcConfig.port, service-templateHandler, healthHandler);
 
     return new Application(grpcService, dbService, jobService, messageService);
 }

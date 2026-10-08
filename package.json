@@ -1,5 +1,5 @@
 {
-  "name": "base-service",
+  "name": "service-template",
   "main": "dist/app.js",
   "scripts": {
     "dev": "nodemon --watch src --watch ../../shared/ --exec ts-node -r tsconfig-paths/register src/app.ts",

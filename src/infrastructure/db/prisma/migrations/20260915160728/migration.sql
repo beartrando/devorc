@@ -1,5 +1,5 @@
 -- CreateTable
-CREATE TABLE "base-services"
+CREATE TABLE "service-templates"
 (
     "id"         TEXT         NOT NULL,
     "user_id"    TEXT         NOT NULL,
@@ -10,19 +10,19 @@ CREATE TABLE "base-services"
     "created_at" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "base-services_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "service-templates_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
-CREATE TABLE "base-service_achievements"
+CREATE TABLE "service-template_achievements"
 (
     "id"             TEXT         NOT NULL,
-    "base-service_id"     TEXT         NOT NULL,
+    "service-template_id"     TEXT         NOT NULL,
     "achievement_id" TEXT         NOT NULL,
     "created_at"     TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at"     TIMESTAMP(3) NOT NULL,
 
-    CONSTRAINT "base-service_achievements_pkey" PRIMARY KEY ("id")
+    CONSTRAINT "service-template_achievements_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -49,18 +49,18 @@ CREATE TABLE "experience_levels"
 );
 
 -- CreateIndex
-CREATE UNIQUE INDEX "base-services_user_id_key" ON "base-services" ("user_id");
+CREATE UNIQUE INDEX "service-templates_user_id_key" ON "service-templates" ("user_id");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "base-service_achievements_base-service_id_achievement_id_key" ON "base-service_achievements" ("base-service_id", "achievement_id");
+CREATE UNIQUE INDEX "service-template_achievements_service-template_id_achievement_id_key" ON "service-template_achievements" ("service-template_id", "achievement_id");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "achievements_title_key" ON "achievements" ("title");
 
 -- AddForeignKey
-ALTER TABLE "base-service_achievements"
-    ADD CONSTRAINT "base-service_achievements_base-service_id_fkey" FOREIGN KEY ("base-service_id") REFERENCES "base-services" ("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "service-template_achievements"
+    ADD CONSTRAINT "service-template_achievements_service-template_id_fkey" FOREIGN KEY ("service-template_id") REFERENCES "service-templates" ("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "base-service_achievements"
-    ADD CONSTRAINT "base-service_achievements_achievement_id_fkey" FOREIGN KEY ("achievement_id") REFERENCES "achievements" ("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+ALTER TABLE "service-template_achievements"
+    ADD CONSTRAINT "service-template_achievements_achievement_id_fkey" FOREIGN KEY ("achievement_id") REFERENCES "achievements" ("id") ON DELETE RESTRICT ON UPDATE CASCADE;

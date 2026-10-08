@@ -1,3 +1,3 @@
-import * as base-serviceSeed from './base-service.seed';
+import * as service-templateSeed from './service-template.seed';
 
-base-serviceSeed.seedBaseServices();
+service-templateSeed.seedServiceTemplates();

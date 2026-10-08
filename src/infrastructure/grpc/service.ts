@@ -1,8 +1,8 @@
 import * as grpc from "@grpc/grpc-js";
 import * as healthProto from '../../contracts/proto/common/health';
-import * as base-serviceProto from '../../contracts/proto/base-service';
+import * as service-templateProto from '../../contracts/proto/service-template';
 import logger from "@shared/logger";
-import BaseServiceHandler from "./handlers/base-service.handler";
+import ServiceTemplateHandler from "./handlers/service-template.handler";
 import HealthHandler from "./handlers/health.handler";
 
 export class GrpcService {
@@ -10,7 +10,7 @@ export class GrpcService {
 
     constructor(
         private readonly port: number,
-        private readonly base-serviceHandler: BaseServiceHandler,
+        private readonly service-templateHandler: ServiceTemplateHandler,
         private readonly healthHandler: HealthHandler,
     ) {
         this.server = new grpc.Server();
@@ -47,7 +47,7 @@ export class GrpcService {
         this.server.forceShutdown();
     }
 
-    private registerBaseServiceService() {
+    private registerServiceTemplateService() {
     }
 
     private registerHealthService() {
@@ -60,7 +60,7 @@ export class GrpcService {
     }
 
     private addServices() {
-        this.registerBaseServiceService();
+        this.registerServiceTemplateService();
         this.registerHealthService();
     }
 }
