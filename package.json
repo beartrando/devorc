@@ -1,0 +1,50 @@
+{
+  "name": "base-service",
+  "main": "dist/app.js",
+  "scripts": {
+    "dev": "nodemon --watch src --watch ../../shared/ --exec ts-node -r tsconfig-paths/register src/app.ts",
+    "stage": "ts-node-dev --respawn --transpile-only src/app.ts",
+    "build": "tsc -p tsconfig.json",
+    "proto:generate": "pnpm exec protoc --plugin=protoc-gen-ts_proto=./node_modules/.bin/protoc-gen-ts_proto --ts_proto_out=src/contracts/proto --ts_proto_opt=outputServices=grpc-js,useExactTypes=false,esModuleInterop=true --proto_path=../../proto/ ../../proto/*.proto ../../proto/**/*.proto",
+    "prisma:generate": "npx prisma generate",
+    "start": "node ./dist/app.js",
+    "migrate": "prisma migrate dev",
+    "migrate:deploy": "prisma migrate deploy",
+    "migrate:reset": "prisma migrate reset",
+    "seed": "tsx src/infrastructure/db/seeds/seed.ts",
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@types/amqplib": "^0.10.8",
+    "@types/jest": "^30.0.0",
+    "@types/jsonwebtoken": "^9.0.10",
+    "@types/supertest": "^7.2.0",
+    "fast-glob": "^3.3.3",
+    "jest": "^30.3.0",
+    "nodemon": "^3.1.14",
+    "supertest": "^7.2.2",
+    "ts-jest": "^29.4.9",
+    "prisma": "^6.19.3",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^6.0.2",
+    "ts-proto": "^2.11.6"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.14.3",
+    "@bufbuild/protobuf": "^2.11.0",
+    "@shared/grpc-client-manager": "workspace:*",
+    "@shared/kafka-manager": "workspace:*",
+    "@shared/pg-boss-manager": "workspace:*",
+    "@shared/logger": "workspace:*",
+    "@shared/errors": "workspace:*",
+    "@prisma/client": "^6.19.3",
+    "jsonwebtoken": "^9.0.3",
+    "pg-boss": "^12.15.0",
+    "kafkajs": "^2.2.4"
+  },
+  "prisma": {
+    "schema": "./src/infrastructure/db/prisma/schema.prisma"
+  }
+}
