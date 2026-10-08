@@ -5,58 +5,20 @@ import ReadyzUseCase from "../application/use-cases/health/readyz";
 import HealthHandler from "../infrastructure/grpc/handlers/health.handler";
 import GrpcService from "../infrastructure/grpc/service";
 import grpcConfig from "../infrastructure/grpc/config";
-import jobConfig from "../infrastructure/job/config";
-import authConfig from "../infrastructure/auth/config";
 import Application from "../application/application";
-import AuthService from "../infrastructure/auth/service";
-import MessageService from "../infrastructure/message/service";
-import JobService from "../infrastructure/job/service";
-import DbService from "../infrastructure/db/service";
-import PrismaServiceTemplateRepository from "../infrastructure/db/repositories/prisma-service-template.repository";
-import GetOrCreateUseCase from "../application/use-cases/service-template/get-or-create";
-import GetByUserUseCase from "../application/use-cases/service-template/get-by-user";
-import ServiceTemplateHandler from "../infrastructure/grpc/handlers/service-template.handler";
-import GetUseCase from "../application/use-cases/service-template/get";
-import UserCreatedConsumer from "../infrastructure/message/consumers/user-created";
-import messageConfig from "../infrastructure/message/configs/message.config";
-import messageProducersConfig from "../infrastructure/message/configs/producers.config";
-import messageConsumersConfig from "../infrastructure/message/configs/consumers.config";
 
 function buildApplication() {
-    const authService = new AuthService(authConfig);
 
-    const jobService = new JobService(jobConfig, messageConfig, messageProducersConfig)
-    const dbService = new DbService();
+    const healthUseCase = new HealthUseCase();
+    const statusUseCase = new StatusUseCase();
+    const livezUseCase = new LivezUseCase();
+    const readyzUseCase = new ReadyzUseCase();
 
-    const service-templateRepository = new PrismaServiceTemplateRepository(dbService.client);
-
-    const getOrCreateUseCase = new GetOrCreateUseCase(service-templateRepository, jobService, messageProducersConfig.service-templateCreated);
-
-
-    const userCreatedConsumer = new UserCreatedConsumer(getOrCreateUseCase);
-
-    const messageService = new MessageService(messageConfig);
-
-    messageService.addConsumer(
-        messageConsumersConfig.userCreated,
-        userCreatedConsumer.execute.bind(userCreatedConsumer)
-    )
-
-    const getUseCase = new GetUseCase(service-templateRepository);
-    const getByUserUseCase = new GetByUserUseCase(service-templateRepository);
-
-    const healthUseCase = new HealthUseCase(dbService, messageService, jobService);
-    const statusUseCase = new StatusUseCase;
-    const livezUseCase = new LivezUseCase;
-    const readyzUseCase = new ReadyzUseCase;
-
-    const service-templateHandler = new ServiceTemplateHandler(authService, getOrCreateUseCase, getByUserUseCase, getUseCase);
     const healthHandler = new HealthHandler(healthUseCase, statusUseCase, livezUseCase, readyzUseCase);
 
-    const grpcService = new GrpcService(grpcConfig.port, service-templateHandler, healthHandler);
+    const grpcService = new GrpcService(grpcConfig.port, healthHandler);
 
-    return new Application(grpcService, dbService, jobService, messageService);
+    return new Application(grpcService);
 }
-
 
 export default buildApplication;
