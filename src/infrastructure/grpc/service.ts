@@ -2,12 +2,14 @@ import * as grpc from "@grpc/grpc-js";
 import * as healthProto from '../../contracts/proto/common/health';
 import logger from "@shared/logger";
 import HealthHandler from "./handlers/health.handler";
+import ServiceTemplateHandler from "./handlers/service-template.handler";
 
 export class GrpcService {
     private readonly server: grpc.Server;
 
     constructor(
         private readonly port: number,
+        private readonly serviceTemplateHandler: ServiceTemplateHandler,
         private readonly healthHandler: HealthHandler,
     ) {
         this.server = new grpc.Server();
