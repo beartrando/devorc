@@ -6,10 +6,7 @@ import MessageService from "../infrastructure/message/service";
 
 export class Application {
     constructor(
-        private readonly grpcService: GrpcService,
         private readonly dbService: DbService,
-        private readonly jobService: JobService,
-        private readonly messageService: MessageService,
     ) {
     }
 
@@ -26,27 +23,21 @@ export class Application {
         process.on("SIGTERM", shutdown);
 
         try {
-            await this.messageService.start();
-            await this.jobService.start();
             await this.dbService.start();
-            await this.grpcService.start();
             logger.info(
-                '🚀 ServiceTemplate service started',
+                '🚀 Devorc service started',
             );
         } catch (err) {
             logger.error(
                 {err},
-                '💥 Failed to start ServiceTemplate service',
+                '💥 Failed to start Devorc service',
             );
             process.exit(1);
         }
     }
 
     async stop() {
-        await this.grpcService.stop();
         await this.dbService.stop();
-        await this.jobService.stop();
-        await this.messageService.stop();
     }
 }
 
