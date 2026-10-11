@@ -17,6 +17,7 @@ COPY tsconfig.base.json ./
 COPY services/service-template/package*.json ./services/service-template/
 COPY services/service-template/jest.config.js ./services/service-template/
 COPY services/service-template/tsconfig.json ./services/service-template/
+COPY services/service-template/jest.setup.ts ./services/service-template/
 COPY services/service-template/src ./services/service-template/src/
 
 RUN apt-get update \
