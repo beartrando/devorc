@@ -1,4 +1,4 @@
-import {PrismaClient} from "@prisma/client";
+import {Prisma, PrismaClient} from "@prisma/client";
 
 export class DbService {
     private readonly prisma: PrismaClient;
@@ -15,6 +15,12 @@ export class DbService {
     }
 
     async stop(): Promise<void> {
+    }
+
+    async transaction<T>(
+        callback: (tx: Prisma.TransactionClient) => Promise<T>,
+    ): Promise<T> {
+        return this.prisma.$transaction(callback);
     }
 
     async check(): Promise<boolean> {

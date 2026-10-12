@@ -5,7 +5,8 @@ export class Application {
     private readonly httpService: HttpServerService;
 
     constructor(httpPort: number) {
-        this.httpService = new HttpServerService(httpPort);
+        private readonly httpService: HttpServerService,
+        private readonly dbService: DbService,
     }
 
     async start(): Promise<void> {
@@ -21,6 +22,7 @@ export class Application {
         process.on("SIGTERM", shutdown);
 
         try {
+            await this.dbService.stop();
             await this.httpService.start();
 
             logger.info(
@@ -37,6 +39,7 @@ export class Application {
 
     async stop() {
         await this.httpService.stop();
+        await this.dbService.stop();
     }
 }
 
