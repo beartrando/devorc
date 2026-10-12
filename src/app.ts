@@ -1,4 +1,5 @@
 import buildApplication from "./composition/build-application";
+import logger from "@shared/logger";
 
 
 const application = buildApplication();

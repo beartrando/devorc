@@ -1,11 +1,12 @@
 {
-  "name": "devork",
+  "name": "devorc",
   "main": "dist/app.js",
   "scripts": {
     "dev": "nodemon --watch src --watch ../../shared/ --exec ts-node -r tsconfig-paths/register src/app.ts",
     "stage": "ts-node-dev --respawn --transpile-only src/app.ts",
     "build": "tsc -p tsconfig.json",
-    "proto:generate": "",
+    "prisma:generate": "npx prisma generate",
+    "proto:generate": "echo 'proto:generate is not needed'",
     "start": "node ./dist/app.js",
     "test": "jest"
   },

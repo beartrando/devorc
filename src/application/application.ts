@@ -1,12 +1,13 @@
 import logger from "@shared/logger";
+import GrpcService from "../infrastructure/grpc/service";
 import HttpServerService from "../infrastructure/http/server.service";
+import DbService from "../infrastructure/db/service";
 
 export class Application {
-    private readonly httpService: HttpServerService;
-
-    constructor(httpPort: number) {
-        private readonly httpService: HttpServerService,
+    constructor(
         private readonly dbService: DbService,
+        private readonly httpService: HttpServerService,
+    ) {
     }
 
     async start(): Promise<void> {
@@ -22,16 +23,17 @@ export class Application {
         process.on("SIGTERM", shutdown);
 
         try {
-            await this.dbService.stop();
+
+            await this.dbService.start();
             await this.httpService.start();
 
             logger.info(
-                '🚀 Devorc service started',
+                '🚀 Gateway service started',
             );
         } catch (err) {
             logger.error(
                 {err},
-                '💥 Failed to start Devorc service',
+                '💥 Failed to start Gateway service',
             );
             process.exit(1);
         }

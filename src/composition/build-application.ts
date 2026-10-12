@@ -17,7 +17,7 @@ import microservicesConfig from "../infrastructure/grpc/config/microservices.con
 import GatewayRouter from "../infrastructure/http/routes/health.routes";
 import Application from "../application/application";
 
-function buildApplication() {
+function buildApplication(): Application {
 
     const healthAggregator = new HealthAggregator();
 
