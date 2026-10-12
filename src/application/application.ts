@@ -1,13 +1,11 @@
 import logger from "@shared/logger";
-import GrpcService from "../infrastructure/grpc/service";
-import DbService from "../infrastructure/db/service";
-import JobService from "../infrastructure/job/service";
-import MessageService from "../infrastructure/message/service";
+import HttpServerService from "../infrastructure/http/server.service";
 
 export class Application {
-    constructor(
-        private readonly dbService: DbService,
-    ) {
+    private readonly httpService: HttpServerService;
+
+    constructor(httpPort: number) {
+        this.httpService = new HttpServerService(httpPort);
     }
 
     async start(): Promise<void> {
@@ -23,7 +21,8 @@ export class Application {
         process.on("SIGTERM", shutdown);
 
         try {
-            await this.dbService.start();
+            await this.httpService.start();
+
             logger.info(
                 '🚀 Devorc service started',
             );
@@ -37,7 +36,7 @@ export class Application {
     }
 
     async stop() {
-        await this.dbService.stop();
+        await this.httpService.stop();
     }
 }
 

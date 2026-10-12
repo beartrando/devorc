@@ -1,31 +1,48 @@
 import logger from "@shared/logger";
 import express, {Express} from 'express';
 import morgan from 'morgan';
-import cors from 'cors'
-// import cookieParser from "cookie-parser";
-import {Server} from "http";
-import ProxyController from "./controllers/proxy-controller";
-import GatewayRouter from "./routes/health.routes";
+import cors from 'cors';
 
 export class HttpServerService {
     private readonly app: Express;
-    private server?: Server;
+    private server?: NodeJS.Server;
 
-    constructor(private readonly httpPort: number, private readonly gatewayRouter: GatewayRouter, private readonly proxyController: ProxyController) {
+    constructor(private readonly httpPort: number) {
 
         this.app = express();
         this.app.use(express.json());
         this.app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
         this.app.use(cors({
-            origin: '*', // ['http://localhost:8080']
+            origin: '*',
             methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
             allowedHeaders: ['Content-Type', 'Authorization'],
         }));
-        // this.app.use(cookieParser());
 
+        // Health check endpoints
+        this.app.get('/health', (req, res) => {
+            res.json({status: 'ok'});
+        });
 
-        this.app.use('/gateway', gatewayRouter.router);
-        this.app.use(proxyController.proxy);
+        this.app.get('/full-health', (req, res) => {
+            res.json({status: 'ok', env: process.env.APP_ENV});
+        });
+
+        this.app.get('/status', (req, res) => {
+            res.json({status: 'ok'});
+        });
+
+        this.app.get('/livez', (req, res) => {
+            res.json({status: 'ok'});
+        });
+
+        this.app.get('/readyz', (req, res) => {
+            res.json({status: 'ok'});
+        });
+
+        // Proxy endpoint - returns unavailable if orchestration not configured
+        this.app.get('/.well-known/proxy', (req, res) => {
+            res.status(503).json({error: 'Proxy service unavailable - orchestration client not configured'});
+        });
     }
 
     async start(): Promise<void> {
