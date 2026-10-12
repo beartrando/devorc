@@ -16,4 +16,4 @@ export class HealthRouter {
     }
 }
 
-export default GatewayRouter;
+export default HealthRouter;

@@ -1,11 +1,14 @@
 import logger from "@shared/logger";
-import express, {Express} from 'express';
+import express, {Express, Router, RequestHandler} from 'express';
 import morgan from 'morgan';
-import cors from 'cors';
+import cors from 'cors'
+// import cookieParser from "cookie-parser";
+import {Server} from "http";
+import GatewayRouter from "./routes/health.routes";
 
 export class HttpServerService {
     private readonly app: Express;
-    private server?: NodeJS.Server;
+    private server?: Server;
 
     constructor(private readonly httpPort: number) {
 
@@ -13,36 +16,19 @@ export class HttpServerService {
         this.app.use(express.json());
         this.app.use(morgan(':method :url :status :res[content-length] - :response-time ms'));
         this.app.use(cors({
-            origin: '*',
+            origin: '*', // ['http://localhost:8080']
             methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
             allowedHeaders: ['Content-Type', 'Authorization'],
         }));
+        // this.app.use(cookieParser());
+    }
 
-        // Health check endpoints
-        this.app.get('/health', (req, res) => {
-            res.json({status: 'ok'});
-        });
-
-        this.app.get('/full-health', (req, res) => {
-            res.json({status: 'ok', env: process.env.APP_ENV});
-        });
-
-        this.app.get('/status', (req, res) => {
-            res.json({status: 'ok'});
-        });
-
-        this.app.get('/livez', (req, res) => {
-            res.json({status: 'ok'});
-        });
-
-        this.app.get('/readyz', (req, res) => {
-            res.json({status: 'ok'});
-        });
-
-        // Proxy endpoint - returns unavailable if orchestration not configured
-        this.app.get('/.well-known/proxy', (req, res) => {
-            res.status(503).json({error: 'Proxy service unavailable - orchestration client not configured'});
-        });
+    addRouter(routeOrProxy: string | RequestHandler, router?: Router): void {
+        if (typeof routeOrProxy === 'string') {
+            this.app.use(routeOrProxy, router!);
+        } else {
+            this.app.use(routeOrProxy);
+        }
     }
 
     async start(): Promise<void> {

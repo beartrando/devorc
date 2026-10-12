@@ -1,5 +1,4 @@
 import logger from "@shared/logger";
-import GrpcService from "../infrastructure/grpc/service";
 import HttpServerService from "../infrastructure/http/server.service";
 import DbService from "../infrastructure/db/service";
 

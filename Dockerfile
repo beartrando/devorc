@@ -1,6 +1,7 @@
 ARG VERSION=dev
 
 # ---------- BASE ----------
+
 FROM node:22-slim AS base
 
 WORKDIR /usr/src/app
@@ -22,14 +23,18 @@ COPY services/devorc/src ./services/devorc/src/
 
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
+        ca-certificates \
         openssl \
         protobuf-compiler \
         libprotobuf-dev \
         wget \
+        ssh \
+        gh \
+        git \
+    && update-ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
 RUN corepack enable && corepack prepare pnpm@11.9.0 --activate
-
 
 # ---------- DEPS ----------
 FROM base AS deps

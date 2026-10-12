@@ -1,6 +1,6 @@
 import wrapper from "./wrapper";
 
-import ExeciuteUseCase from "../../../application/use-cases/devorc/execute";
+import ExecuteUseCase from "../../../application/use-cases/devorc/execute";
 
 export class DevorcController {
 
