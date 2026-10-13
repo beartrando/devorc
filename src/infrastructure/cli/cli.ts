@@ -13,6 +13,7 @@ import GitService from '../git/service';
 
 export class Cli {
     private readonly rl = createInterface({input, output});
+    private selectedMenuIndex = 0;
 
     constructor(
         private readonly gitService: GitService,
@@ -87,14 +88,13 @@ export class Cli {
             'Exit',
         ];
 
-        let selected = 0;
-
         const render = () => {
+            console.clear();
             console.log('\n=== DevOrc ===\n');
 
             items.forEach((item, index) => {
                 console.log(
-                    `${index + 1}. ${index === selected ? '❯' : ' '} ${item}`,
+                    `${index + 1}. ${index === this.selectedMenuIndex ? '❯' : ' '} ${item}`,
                 );
             });
 
@@ -127,20 +127,23 @@ export class Cli {
                         number >= 1 &&
                         number <= items.length
                     ) {
+                        this.selectedMenuIndex = number - 1;
                         cleanup();
-                        resolve(items[number - 1]);
+                        resolve(items[this.selectedMenuIndex]);
                         return;
                     }
 
                     if (key.name === 'up') {
-                        selected = (selected - 1 + items.length) % items.length;
+                        this.selectedMenuIndex =
+                            (this.selectedMenuIndex - 1 + items.length) % items.length;
                         render();
                     } else if (key.name === 'down') {
-                        selected = (selected + 1) % items.length;
+                        this.selectedMenuIndex =
+                            (this.selectedMenuIndex + 1) % items.length;
                         render();
                     } else if (key.name === 'return') {
                         cleanup();
-                        resolve(items[selected]);
+                        resolve(items[this.selectedMenuIndex]);
                     }
                 };
 
