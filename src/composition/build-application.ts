@@ -7,6 +7,8 @@ import HealthController from "../infrastructure/http/controllers/health.controll
 import HttpServerService from "../infrastructure/http/server.service";
 import Application from "../application/application";
 import DbService from "../infrastructure/db/service";
+import GithubService from "../infrastructure/github/service";
+import GitService from "../infrastructure/git/service";
 import DevorcRouter from "../infrastructure/http/routes/devorc.routes";
 import {HealthRouter} from "../infrastructure/http/routes/health.routes";
 import DevorcController from "../infrastructure/http/controllers/devorc.controller";
@@ -34,8 +36,11 @@ function buildApplication(): Application {
         readyzUseCase,
     );
 
+    const githubService = new GithubService();
+    const gitService = new GitService();
+
     const issueCreateUseCase = new IssueCreateUseCase();
-    const issueFlushUseCase = new IssueFlushUseCase();
+    const issueFlushUseCase = new IssueFlushUseCase(githubService, gitService);
     const issueSelectUseCase = new IssueSelectUseCase();
     const parkUseCase = new ParkUseCase();
     const pullUseCase = new PullUseCase();

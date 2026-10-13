@@ -1,105 +1,195 @@
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
+import {execFile} from 'node:child_process';
+import {promisify} from 'node:util';
+import BranchName, {DEFAULT_BRANCH_NAME} from "./branch/value-objects/branch-name.vo";
 
 const execFileAsync = promisify(execFile);
 
+type RepositoryOptions = {
+    extra?: boolean;
+    module?: boolean;
+};
+
 export class GitService {
-    private readonly repositories = new Map<string, string>();
+    private readonly serviceRepositories = new Map<string, string>();
+    private readonly extraRepositories = new Map<string, string>();
+    private readonly moduleRepositories = new Map<string, string>();
+    private branchName = BranchName.create(DEFAULT_BRANCH_NAME);
 
-    addRepository(name: string, path: string): void {
-        this.repositories.set(name, path);
-    }
+    constructor(config: {
+        gitServiceRepos: string[];
+        gitExtraRepos: string[];
+        gitModuleRepos: string[];
+    }) {
+        for (const repo of config.gitServiceRepos) {
+            this.serviceRepositories.set(repo, repo);
+        }
 
-    removeRepository(name: string): boolean {
-        return this.repositories.delete(name);
-    }
+        for (const repo of config.gitExtraRepos) {
+            this.extraRepositories.set(repo, repo);
+        }
 
-    listRepositories(): Array<{ name: string; path: string }> {
-        return Array.from(this.repositories, ([name, path]) => ({
-            name,
-            path,
-        }));
-    }
-
-    async executeForAll(
-        operation: (name: string, path: string) => Promise<unknown>,
-    ): Promise<void> {
-        for (const [name, path] of this.repositories) {
-            await operation(name, path);
+        for (const repo of config.gitModuleRepos) {
+            this.moduleRepositories.set(repo, repo);
         }
     }
 
-    async pull(): Promise<void> {
-        await this.executeForAll(async (_, path) => {
-            await this.git(path, ['pull']);
-        });
+    setBranch(name: string): void {
+        this.branchName = BranchName.create(name);
     }
 
-    async push(): Promise<void> {
-        await this.executeForAll(async (_, path) => {
-            await this.git(path, ['push']);
-        });
+    addServiceRepository(name: string, path: string): void {
+        this.serviceRepositories.set(name, path);
     }
 
-    async isEqualToOrigin(path: string): Promise<boolean> {
-        await this.git(path, ['fetch', 'origin']);
-
-        const branch = await this.git(path, [
-            'branch',
-            '--show-current',
-        ]);
-
-        const local = await this.git(path, [
-            'rev-parse',
-            'HEAD',
-        ]);
-
-        const remote = await this.git(path, [
-            'rev-parse',
-            `origin/${branch}`,
-        ]);
-
-        return local === remote;
+    addExtraRepository(name: string, path: string): void {
+        this.extraRepositories.set(name, path);
     }
 
-    async isDevBranch(path: string): Promise<boolean> {
-        const branch = await this.git(path, [
-            'branch',
-            '--show-current',
-        ]);
-
-        return branch === 'dev';
+    addModuleRepository(name: string, path: string): void {
+        this.moduleRepositories.set(name, path);
     }
 
-    async isStagingClean(path: string): Promise<boolean> {
-        const status = await this.git(path, [
-            'status',
-            '--porcelain',
-        ]);
+    getRepositories({extra = false, module = false,}: RepositoryOptions = {}): Map<string, string> {
+        const repositories = new Map(this.serviceRepositories);
 
-        return status === '';
-    }
+        if (extra) {
+            for (const [name, path] of this.extraRepositories) {
+                repositories.set(name, path);
+            }
+        }
 
-    async switchToDev(path: string): Promise<void> {
-        await this.git(path, ['switch', 'dev']);
-    }
+        if (module) {
+            for (const [name, path] of this.moduleRepositories) {
+                repositories.set(name, path);
+            }
+        }
 
-    async promoteDevToUat(path: string): Promise<void> {
-        await this.git(path, ['switch', 'uat']);
-        await this.git(path, ['merge', 'dev']);
+        return repositories;
     }
 
     private async git(
         path: string,
         args: string[],
     ): Promise<string> {
-        const { stdout } = await execFileAsync(
+        const {stdout} = await execFileAsync(
             'git',
             args,
-            { cwd: path },
+            {cwd: path},
         );
 
         return stdout.trim();
+    }
+
+
+    async executeForAll(
+        operation: (name: string, path: string) => Promise<unknown>,
+        repositories: Map<string, string>,
+    ): Promise<void> {
+        for (const [name, path] of repositories) {
+            await operation(name, path);
+        }
+    }
+
+    async checkoutBranches(options: RepositoryOptions = {}): Promise<void> {
+        const repositories = this.getRepositories(options);
+        const errors: string[] = [];
+        for (const [name, path] of repositories) {
+            try {
+                const currentBranch = await this.git(path, ['branch', '--show-current',]);
+                if (currentBranch !== this.branchName.value) {
+                    try {
+                        await this.git(path, ['switch', this.branchName.value,]);
+                    } catch {
+                        // The target branch may exist only on the remote.
+                        await this.git(path, ['switch', '--track', '-c', this.branchName.value, `origin/${this.branchName.value}`,]);
+                    }
+                }
+            } catch (error) {
+                const message = error instanceof Error ? error.message : String(error);
+                errors.push(`${name}: ${message}`);
+            }
+        }
+        if (errors.length > 0) {
+            throw new Error(`Failed to switch repositories to branch "${this.branchName.value}":\n${errors.join('\n')}`,);
+        }
+    }
+
+
+    async commit(
+        message: string,
+        options: RepositoryOptions = {},
+    ): Promise<void> {
+        await this.executeForAll(async (name, path) => {
+            await this.git(path, ['add', '-A']);
+
+            const status = await this.git(path, [
+                'status',
+                '--porcelain',
+            ]);
+
+            if (status) {
+                await this.git(path, ['commit', '-m', message]);
+            } else {
+                console.log(`${name}: nothing to commit`);
+            }
+        }, this.getRepositories(options));
+    }
+
+    async pull(options: RepositoryOptions = {}): Promise<void> {
+        await this.executeForAll(async (name, path) => {
+            console.log(`${name}: pulling`);
+            await this.git(path, ['pull']);
+        }, this.getRepositories(options));
+    }
+
+    async push(options: RepositoryOptions = {}): Promise<void> {
+        await this.executeForAll(async (name, path) => {
+            console.log(`${name}: pushing`);
+            await this.git(path, ['push']);
+        }, this.getRepositories(options));
+    }
+
+    async commitAndPush(
+        message: string,
+        options: RepositoryOptions = {},
+    ): Promise<void> {
+        // Stage 1: verify and switch all repositories.
+        await this.checkoutBranches(options);
+
+        // Stage 2: commit changes.
+        await this.commit(message, options);
+
+        // Stage 3: pull remote changes.
+        await this.pull(options);
+
+        // Stage 4: push local commits.
+        await this.push(options);
+    }
+
+    async checkoutAndPull(
+        options: RepositoryOptions = {},
+    ): Promise<void> {
+        // Stage 1: verify and switch all repositories.
+        await this.checkoutBranches(options);
+
+        // Stage 3: pull remote changes.
+        await this.pull(options);
+
+    }
+
+    async park(
+        message: string,
+        options: RepositoryOptions = {},
+    ): Promise<void> {
+        // Stage 1: verify and switch all repositories.
+        await this.commitAndPush(message, options);
+
+        // Stage 3: pull remote changes.
+        this.setBranch(DEFAULT_BRANCH_NAME);
+        await this.checkoutBranches(options);
+        await this.pull(options);
+
+
     }
 }
 

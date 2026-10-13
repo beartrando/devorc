@@ -10,8 +10,10 @@ import PushUseCase from "../../../application/use-cases/devorc/push";
 export class DevorcController {
 
     issueCreate = wrapper(async (req, res) => {
-        return await this.issueCreateUseCase.execute();
+        const { title } = req.body ?? {};
+        return await this.issueCreateUseCase.execute(title);
     });
+
     issueFlush = wrapper(async () => {
         return await this.issueFlushUseCase.execute();
     });
