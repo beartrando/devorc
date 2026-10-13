@@ -10,7 +10,13 @@ import DbService from "../infrastructure/db/service";
 import DevorcRouter from "../infrastructure/http/routes/devorc.routes";
 import {HealthRouter} from "../infrastructure/http/routes/health.routes";
 import DevorcController from "../infrastructure/http/controllers/devorc.controller";
-import ExecuteUseCase from "../application/use-cases/devorc/execute";
+import IssueFlushUseCase from "../application/use-cases/devorc/issue/issue-flush";
+import IssueSelectUseCase from "../application/use-cases/devorc/issue/issue-select";
+import ParkUseCase from "../application/use-cases/devorc/park";
+import PushUseCase from "../application/use-cases/devorc/push";
+import IssueCreateUseCase from "../application/use-cases/devorc/issue/issue-create";
+import IssueStatusUseCase from "../application/use-cases/devorc/status";
+import PullUseCase from "../application/use-cases/devorc/pull";
 
 function buildApplication(): Application {
 
@@ -28,9 +34,23 @@ function buildApplication(): Application {
         readyzUseCase,
     );
 
-    const executeUseCase = new ExecuteUseCase();
+    const issueCreateUseCase = new IssueCreateUseCase();
+    const issueFlushUseCase = new IssueFlushUseCase();
+    const issueSelectUseCase = new IssueSelectUseCase();
+    const parkUseCase = new ParkUseCase();
+    const pullUseCase = new PullUseCase();
+    const pushUseCase = new PushUseCase();
+    const issueStatusUseCase = new IssueStatusUseCase();
 
-    const devorcController = new DevorcController(executeUseCase);
+    const devorcController = new DevorcController(
+        issueCreateUseCase,
+        issueFlushUseCase,
+        issueSelectUseCase,
+        parkUseCase,
+        pullUseCase,
+        pushUseCase,
+        issueStatusUseCase,
+    );
 
     const healthRouter = new HealthRouter(healthController);
     const devorcRouter = new DevorcRouter(devorcController);
@@ -38,8 +58,8 @@ function buildApplication(): Application {
 
     const httpService = new HttpServerService(httpConfig.port);
 
-    httpService.addRouter('health', healthRouter.router);
-    httpService.addRouter('/', devorcRouter.router);
+    httpService.addRouter('/', healthRouter.router);
+    httpService.addRouter('/devorc', devorcRouter.router);
 
     const application = new Application(dbService, httpService);
 

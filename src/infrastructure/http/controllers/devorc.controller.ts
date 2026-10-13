@@ -1,17 +1,49 @@
 import wrapper from "./wrapper";
-
-import ExecuteUseCase from "../../../application/use-cases/devorc/execute";
+import StatusUseCase from "../../../application/use-cases/devorc/status";
+import IssueCreateUseCase from "../../../application/use-cases/devorc/issue/issue-create";
+import IssueFlushUseCase from "../../../application/use-cases/devorc/issue/issue-flush";
+import IssueSelectUseCase from "../../../application/use-cases/devorc/issue/issue-select";
+import ParkUseCase from "../../../application/use-cases/devorc/park";
+import PullUseCase from "../../../application/use-cases/devorc/pull";
+import PushUseCase from "../../../application/use-cases/devorc/push";
 
 export class DevorcController {
 
-    execute = wrapper(async (req, res) => {
-        return await this.executeUseCase.execute();
+    issueCreate = wrapper(async (req, res) => {
+        return await this.issueCreateUseCase.execute();
+    });
+    issueFlush = wrapper(async () => {
+        return await this.issueFlushUseCase.execute();
+    });
+    issueSelect = wrapper(async () => {
+        return await this.issueSelectUseCase.execute();
+    });
+    park = wrapper(async () => {
+        return await this.parkUseCase.execute();
+    });
+    pull = wrapper(async () => {
+        return await this.pullUseCase.execute();
+    });
+    push = wrapper(async () => {
+        return await this.pushUseCase.execute();
+    });
+    status = wrapper(async () => {
+        return await this.statusUseCase.execute();
     });
 
     constructor(
-        private readonly executeUseCase: ExecuteUseCase,
+        private readonly issueCreateUseCase: IssueCreateUseCase,
+        private readonly issueFlushUseCase: IssueFlushUseCase,
+        private readonly issueSelectUseCase: IssueSelectUseCase,
+        private readonly parkUseCase: ParkUseCase,
+        private readonly pullUseCase: PullUseCase,
+        private readonly pushUseCase: PushUseCase,
+        private readonly statusUseCase: StatusUseCase,
     ) {
     }
+
+
 }
 
 export default DevorcController;
+
