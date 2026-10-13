@@ -94,4 +94,3 @@ export class Cli {
 }
 
 export default Cli;
-```

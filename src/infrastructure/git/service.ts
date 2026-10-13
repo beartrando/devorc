@@ -104,4 +104,3 @@ export class GitService {
 }
 
 export default GitService;
-```
