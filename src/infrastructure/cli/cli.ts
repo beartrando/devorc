@@ -1,4 +1,5 @@
 import {createInterface} from 'node:readline/promises';
+import {emitKeypressEvents} from 'node:readline';
 import {stdin as input, stdout as output} from 'node:process';
 
 import IssueFlushUseCase from '../../application/use-cases/devorc/issue/issue-flush';
@@ -7,8 +8,8 @@ import ParkUseCase from '../../application/use-cases/devorc/park';
 import PullUseCase from '../../application/use-cases/devorc/pull';
 import PushUseCase from '../../application/use-cases/devorc/push';
 import RefreshStatusUseCase from '../../application/use-cases/devorc/refresh-status';
-import IssueCreateUseCase from "../../application/use-cases/devorc/issue/issue-create";
-import GitService from "../git/service";
+import IssueCreateUseCase from '../../application/use-cases/devorc/issue/issue-create';
+import GitService from '../git/service';
 
 export class Cli {
     private readonly rl = createInterface({input, output});
@@ -22,60 +23,51 @@ export class Cli {
         private readonly pullUseCase: PullUseCase,
         private readonly pushUseCase: PushUseCase,
         private readonly statusUseCase: RefreshStatusUseCase,
-    ) {
-    }
+    ) {}
 
     async start(): Promise<void> {
+        emitKeypressEvents(input);
+
+        if (!input.isTTY) {
+            throw new Error('Interactive CLI requires a TTY');
+        }
+
         try {
             while (true) {
+                console.clear();
                 await this.showRepositoryStatuses();
 
-                console.log('\n=== DevOrc ===');
-                console.log('1. Status');
-                console.log('2. Create issue');
-                console.log('3. Flush issue');
-                console.log('4. Select issue');
-                console.log('5. Pull');
-                console.log('6. Push');
-                console.log('7. Park');
-                // console.log('8. Health');
-                console.log('0. Exit');
-
-                const choice = await this.rl.question('Choose action: ');
+                const choice = await this.selectMenu();
 
                 try {
-                    switch (choice.trim()) {
-                        case '1':
+                    switch (choice) {
+                        case 'Status':
                             await this.status();
                             break;
-                        case '2':
+                        case 'Create issue':
                             await this.createIssue();
                             break;
-                        case '3':
+                        case 'Flush issue':
                             await this.flushIssue();
                             break;
-                        case '4':
+                        case 'Select issue':
                             await this.selectIssue();
                             break;
-                        case '5':
+                        case 'Pull':
                             await this.pull();
                             break;
-                        case '6':
+                        case 'Push':
                             await this.push();
                             break;
-                        case '7':
+                        case 'Park':
                             await this.park();
                             break;
-                        // case '8':
-                        //     await this.health();
-                        //     break;
-                        case '0':
+                        case 'Exit':
                             return;
-                        default:
-                            console.log('Unknown action');
                     }
                 } catch (error) {
                     console.error('Error:', error);
+                    await this.rl.question('\nPress Enter to continue...');
                 }
             }
         } finally {
@@ -83,9 +75,68 @@ export class Cli {
         }
     }
 
-    // private async health(): Promise<void> {
-    //     await this.healthUseCase.execute();
-    // }
+    private async selectMenu(): Promise<string> {
+        const items = [
+            'Status',
+            'Create issue',
+            'Flush issue',
+            'Select issue',
+            'Pull',
+            'Push',
+            'Park',
+            'Exit',
+        ];
+
+        let selected = 0;
+
+        const render = () => {
+            console.clear();
+            console.log('\n=== DevOrc ===\n');
+
+            items.forEach((item, index) => {
+                console.log(`${index === selected ? '❯' : ' '} ${item}`);
+            });
+
+            console.log('\n↑ ↓ Navigate · Enter Select · Ctrl+C Exit');
+        };
+
+        input.setRawMode(true);
+        render();
+
+        try {
+            return await new Promise<string>((resolve) => {
+                const cleanup = () => {
+                    input.removeListener('keypress', onKeypress);
+                };
+
+                const onKeypress = (
+                    _str: string,
+                    key: {name?: string; ctrl?: boolean},
+                ) => {
+                    if (key.ctrl && key.name === 'c') {
+                        cleanup();
+                        resolve('Exit');
+                        return;
+                    }
+
+                    if (key.name === 'up') {
+                        selected = (selected - 1 + items.length) % items.length;
+                        render();
+                    } else if (key.name === 'down') {
+                        selected = (selected + 1) % items.length;
+                        render();
+                    } else if (key.name === 'return') {
+                        cleanup();
+                        resolve(items[selected]);
+                    }
+                };
+
+                input.on('keypress', onKeypress);
+            });
+        } finally {
+            input.setRawMode(false);
+        }
+    }
 
     private async createIssue(): Promise<void> {
         const name = await this.rl.question('Enter branch name: ');
@@ -117,7 +168,7 @@ export class Cli {
     }
 
     private async showRepositoryStatuses(): Promise<void> {
-        const statuses = await this.gitService.getRepositoryStatuses();
+        const statuses = this.gitService.getRepositoryStatuses();
 
         console.table(
             Array.from(statuses, ([repository, status]) => ({
