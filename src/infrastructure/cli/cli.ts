@@ -36,8 +36,6 @@ export class Cli {
         try {
             while (true) {
                 console.clear();
-                await this.showRepositoryStatuses();
-
                 const choice = await this.selectMenu();
 
                 try {
@@ -90,6 +88,7 @@ export class Cli {
 
         const render = () => {
             console.clear();
+            this.showRepositoryStatuses();
             console.log('\n=== DevOrc ===\n');
 
             items.forEach((item, index) => {
@@ -183,7 +182,7 @@ export class Cli {
         await this.statusUseCase.execute();
     }
 
-    private async showRepositoryStatuses(): Promise<void> {
+    private showRepositoryStatuses(): void {
         const statuses = this.gitService.getRepositoryStatuses();
 
         console.table(
