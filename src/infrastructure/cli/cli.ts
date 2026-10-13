@@ -90,14 +90,15 @@ export class Cli {
         let selected = 0;
 
         const render = () => {
-            console.clear();
             console.log('\n=== DevOrc ===\n');
 
             items.forEach((item, index) => {
-                console.log(`${index === selected ? '❯' : ' '} ${item}`);
+                console.log(
+                    `${index + 1}. ${index === selected ? '❯' : ' '} ${item}`,
+                );
             });
 
-            console.log('\n↑ ↓ Navigate · Enter Select · Ctrl+C Exit');
+            console.log('\n↑ ↓ Navigate · 1–8 Select · Enter Confirm · Ctrl+C Exit');
         };
 
         input.setRawMode(true);
@@ -116,6 +117,18 @@ export class Cli {
                     if (key.ctrl && key.name === 'c') {
                         cleanup();
                         resolve('Exit');
+                        return;
+                    }
+
+                    const number = Number(key.name);
+
+                    if (
+                        Number.isInteger(number) &&
+                        number >= 1 &&
+                        number <= items.length
+                    ) {
+                        cleanup();
+                        resolve(items[number - 1]);
                         return;
                     }
 
