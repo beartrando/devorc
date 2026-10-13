@@ -6,7 +6,7 @@ import IssueSelectUseCase from "./application/use-cases/devorc/issue/issue-selec
 import ParkUseCase from "./application/use-cases/devorc/park";
 import PullUseCase from "./application/use-cases/devorc/pull";
 import PushUseCase from "./application/use-cases/devorc/push";
-import IssueStatusUseCase from "./application/use-cases/devorc/status";
+import StatusUseCase from "./application/use-cases/devorc/status";
 import DevorcController from "./infrastructure/http/controllers/devorc.controller";
 import HealthUseCase from "./application/use-cases/health/health";
 import StatusUseCase from "./application/use-cases/health/status";
@@ -55,28 +55,28 @@ export class Cli {
                 try {
                     switch (choice.trim()) {
                         case '1':
-                            await healthUseCase.execute();
+                            await this.health();
                             break;
                         case '2':
-                            await issueCreateUseCase.execute();
+                            await this.issueCreate();
                             break;
                         case '3':
-                            await issueFlushUseCase.execute();
+                            await this.issueFlush();
                             break;
                         case '4':
-                            await issueSelectUseCase.execute();
+                            await this.issueSelect();
                             break;
                         case '5':
-                            await pullUseCase.execute();
+                            await this.pull();
                             break;
                         case '6':
-                            await pushUseCase.execute();
+                            await this.push();
                             break;
                         case '7':
-                            await parkUseCase.execute();
+                            await this.park();
                             break;
                         case '8':
-                            await issueStatusUseCase.execute();
+                            await this.status();
                             break;
                         case '0':
                             return;
@@ -90,6 +90,40 @@ export class Cli {
         } finally {
             this.rl.close();
         }
+    }
+
+
+    private async health(): Promise<void> {
+        return await healthUseCase.execute();
+    }
+
+    private async createIssue(): Promise<void> {
+        //asc for issue name
+        return await createIssueUseCase.execute();
+    }
+
+    private async flushIssue(): Promise<void> {
+        return await flushIssueUseCase.execute();
+    }
+
+    private async selectIssue(): Promise<void> {
+        return await selectIssueUseCase.execute();
+    }
+
+    private async pull(): Promise<void> {
+        return await pullUseCase.execute();
+    }
+
+    private async push(): Promise<void> {
+        return await pushUseCase.execute();
+    }
+
+    private async park(): Promise<void> {
+        return await parkUseCase.execute();
+    }
+
+    private async status(): Promise<void> {
+        return await statusUseCase.execute();
     }
 }
 
