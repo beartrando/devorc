@@ -1,5 +1,5 @@
 import wrapper from "./wrapper";
-import StatusUseCase from "../../../application/use-cases/devorc/status";
+import RefreshStatusUseCase from "../../../application/use-cases/devorc/refresh-status";
 import IssueCreateUseCase from "../../../application/use-cases/devorc/issue/issue-create";
 import IssueFlushUseCase from "../../../application/use-cases/devorc/issue/issue-flush";
 import IssueSelectUseCase from "../../../application/use-cases/devorc/issue/issue-select";
@@ -29,8 +29,8 @@ export class DevorcController {
     push = wrapper(async () => {
         return await this.pushUseCase.execute();
     });
-    status = wrapper(async () => {
-        return await this.statusUseCase.execute();
+    refreshStatus = wrapper(async () => {
+        return await this.refreshStatusUseCase.execute();
     });
 
     constructor(
@@ -40,7 +40,7 @@ export class DevorcController {
         private readonly parkUseCase: ParkUseCase,
         private readonly pullUseCase: PullUseCase,
         private readonly pushUseCase: PushUseCase,
-        private readonly statusUseCase: StatusUseCase,
+        private readonly refreshStatusUseCase: RefreshStatusUseCase,
     ) {
     }
 

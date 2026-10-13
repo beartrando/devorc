@@ -80,6 +80,10 @@ export class GitService {
         this.moduleRepositories.set(name, path);
     }
 
+    getRepositoryStatuses(): Map<string, RepositoryStatus> {
+        return new Map(this.repositoryStatuses);
+    }
+
     private async git(
         path: string,
         args: string[],

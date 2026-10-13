@@ -15,7 +15,7 @@ export class DevorcRouter {
         this.router.post("/park", this.devorcController.park,);
         this.router.post("/pull", this.devorcController.pull,);
         this.router.post("/push", this.devorcController.push,);
-        this.router.post("/status", this.devorcController.status,);
+        this.router.post("/refresh-status", this.devorcController.refreshStatus,);
     }
 }
 

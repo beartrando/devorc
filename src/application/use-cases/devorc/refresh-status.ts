@@ -1,7 +1,7 @@
 import GithubService from "../../../infrastructure/github/service";
 import GitService from "../../../infrastructure/git/service";
 
-export class StatusUseCase {
+export class RefreshStatusUseCase {
 
     constructor(
 
@@ -15,11 +15,11 @@ export class StatusUseCase {
     async execute(): Promise<Object> {
         // return this.gitService.checkStatus
         return {
-            status: 'StatusUseCase',
+            status: 'RefreshStatusUseCase',
         };
 
     }
 }
 
 
-export default StatusUseCase;
+export default RefreshStatusUseCase;

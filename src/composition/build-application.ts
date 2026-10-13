@@ -17,59 +17,77 @@ import IssueSelectUseCase from "../application/use-cases/devorc/issue/issue-sele
 import ParkUseCase from "../application/use-cases/devorc/park";
 import PushUseCase from "../application/use-cases/devorc/push";
 import IssueCreateUseCase from "../application/use-cases/devorc/issue/issue-create";
-import IssueStatusUseCase from "../application/use-cases/devorc/status";
+import RefreshStatusUseCase from "../application/use-cases/devorc/refresh-status";
 import PullUseCase from "../application/use-cases/devorc/pull";
 import gitConfig from "../infrastructure/git/config";
+import Cli from "../infrastructure/cli/cli";
+
+
+const dbService = new DbService();
+
+const healthUseCase = new HealthUseCase(dbService);
+const statusUseCase = new StatusUseCase;
+const livezUseCase = new LivezUseCase;
+const readyzUseCase = new ReadyzUseCase;
+
+const healthController = new HealthController(
+    healthUseCase,
+    statusUseCase,
+    livezUseCase,
+    readyzUseCase,
+);
+
+const githubService = new GithubService();
+const gitService = new GitService(gitConfig);
+
+const issueCreateUseCase = new IssueCreateUseCase(githubService, gitService);
+const issueFlushUseCase = new IssueFlushUseCase(githubService, gitService);
+const issueSelectUseCase = new IssueSelectUseCase(githubService, gitService);
+const parkUseCase = new ParkUseCase(githubService, gitService);
+const pullUseCase = new PullUseCase(githubService, gitService);
+const pushUseCase = new PushUseCase(githubService, gitService);
+const refreshStatusUseCase = new RefreshStatusUseCase(githubService, gitService);
+
+const devorcController = new DevorcController(
+    issueCreateUseCase,
+    issueFlushUseCase,
+    issueSelectUseCase,
+    parkUseCase,
+    pullUseCase,
+    pushUseCase,
+    refreshStatusUseCase,
+);
+
+const healthRouter = new HealthRouter(healthController);
+const devorcRouter = new DevorcRouter(devorcController);
+
+
+const httpService = new HttpServerService(httpConfig.port);
+
+httpService.addRouter('/', healthRouter.router);
+httpService.addRouter('/devorc', devorcRouter.router);
 
 function buildApplication(): Application {
 
-    const dbService = new DbService();
+    const application = new Application(dbService, httpService);
 
-    const healthUseCase = new HealthUseCase(dbService);
-    const statusUseCase = new StatusUseCase;
-    const livezUseCase = new LivezUseCase;
-    const readyzUseCase = new ReadyzUseCase;
+    return application;
+}
 
-    const healthController = new HealthController(
-        healthUseCase,
-        statusUseCase,
-        livezUseCase,
-        readyzUseCase,
-    );
+export function buildCli(): Cli {
 
-    const githubService = new GithubService();
-    const gitService = new GitService(gitConfig);
-
-    const issueCreateUseCase = new IssueCreateUseCase(githubService, gitService);
-    const issueFlushUseCase = new IssueFlushUseCase(githubService, gitService);
-    const issueSelectUseCase = new IssueSelectUseCase(githubService, gitService);
-    const parkUseCase = new ParkUseCase(githubService, gitService);
-    const pullUseCase = new PullUseCase(githubService, gitService);
-    const pushUseCase = new PushUseCase(githubService, gitService);
-    const issueStatusUseCase = new IssueStatusUseCase(githubService, gitService);
-
-    const devorcController = new DevorcController(
+    const cli = new Cli(
+        gitService,
         issueCreateUseCase,
         issueFlushUseCase,
         issueSelectUseCase,
         parkUseCase,
         pullUseCase,
         pushUseCase,
-        issueStatusUseCase,
+        refreshStatusUseCase
     );
 
-    const healthRouter = new HealthRouter(healthController);
-    const devorcRouter = new DevorcRouter(devorcController);
-
-
-    const httpService = new HttpServerService(httpConfig.port);
-
-    httpService.addRouter('/', healthRouter.router);
-    httpService.addRouter('/devorc', devorcRouter.router);
-
-    const application = new Application(dbService, httpService);
-
-    return application;
+    return cli;
 }
 
 export default buildApplication;
