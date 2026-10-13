@@ -1,7 +1,7 @@
 export class PushUseCase {
     async execute(): Promise<Object> {
         return {
-            status: 'executed',
+            status: 'PushUseCase',
         };
 
     }

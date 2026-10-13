@@ -1,7 +1,7 @@
 export class IssueSelectUseCase {
     async execute(): Promise<Object> {
         return {
-            status: 'executed',
+            status: 'IssueSelectUseCase',
         };
 
     }
