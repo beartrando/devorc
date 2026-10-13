@@ -11,9 +11,45 @@ import RefreshStatusUseCase from '../../application/use-cases/devorc/refresh-sta
 import IssueCreateUseCase from '../../application/use-cases/devorc/issue/issue-create';
 import GitService from '../git/service';
 
+type MenuItem = {
+    label: string;
+    action: () => Promise<void> | void;
+};
+
 export class Cli {
     private readonly rl = createInterface({input, output});
     private selectedMenuIndex = 0;
+
+    private readonly menu: MenuItem[] = [
+        {
+            label: 'Create issue',
+            action: () => this.createIssue(),
+        },
+        {
+            label: 'Flush issue',
+            action: () => this.flushIssue(),
+        },
+        {
+            label: 'Select issue',
+            action: () => this.selectIssue(),
+        },
+        {
+            label: 'Pull',
+            action: () => this.pull(),
+        },
+        {
+            label: 'Commit and push all',
+            action: () => this.push(),
+        },
+        {
+            label: 'Park',
+            action: () => this.park(),
+        },
+        {
+            label: 'Exit',
+            action: () => {},
+        },
+    ];
 
     constructor(
         private readonly gitService: GitService,
@@ -37,34 +73,16 @@ export class Cli {
             while (true) {
                 await this.status();
                 console.clear();
+
                 const choice = await this.selectMenu();
+                const item = this.menu.find(({label}) => label === choice);
+
+                if (item?.label === 'Exit') {
+                    return;
+                }
 
                 try {
-                    switch (choice) {
-                        // case 'Status':
-                        //     await this.status();
-                        //     break;
-                        case 'Create issue':
-                            await this.createIssue();
-                            break;
-                        case 'Flush issue':
-                            await this.flushIssue();
-                            break;
-                        case 'Select issue':
-                            await this.selectIssue();
-                            break;
-                        case 'Pull':
-                            await this.pull();
-                            break;
-                        case 'Commit and push all':
-                            await this.push();
-                            break;
-                        case 'Park':
-                            await this.park();
-                            break;
-                        case 'Exit':
-                            return;
-                    }
+                    await item?.action();
                 } catch (error) {
                     console.error('Error:', error);
                     await this.rl.question('\nPress Enter to continue...');
@@ -75,17 +93,9 @@ export class Cli {
         }
     }
 
+
     private async selectMenu(): Promise<string> {
-        const items = [
-            // 'Status',
-            'Create issue',
-            'Flush issue',
-            'Select issue',
-            'Pull',
-            'Commit and push all',
-            'Park',
-            'Exit',
-        ];
+        const items = this.menu.map(({label}) => label);
 
         const render = () => {
             console.clear();
@@ -98,7 +108,8 @@ export class Cli {
                 );
             });
 
-            console.log('\n↑ ↓ Navigate · 1–8 Select · Enter Confirm · Ctrl+C Exit');
+            const items = this.menu.map(({label}) => label);
+            console.log(`\n↑ ↓ Navigate · 1–${items.length} Select · Enter Confirm · Q Exit`);
         };
 
         input.setRawMode(true);
@@ -114,7 +125,13 @@ export class Cli {
                     _str: string,
                     key: {name?: string; ctrl?: boolean},
                 ) => {
-                    if (key.ctrl && key.name === 'c') {
+                    if (
+                        (key.ctrl && key.name === 'c') ||
+                        key.name === 'q' ||
+                        key.name === 'Q' ||
+                        key.name === 'й' ||
+                        key.name === 'Й'
+                    ) {
                         cleanup();
                         resolve('Exit');
                         return;
@@ -187,12 +204,17 @@ export class Cli {
         const statuses = this.gitService.getRepositoryStatuses();
 
         console.table(
-            Array.from(statuses, ([repository, status]) => ({
-                Repository: repository,
-                Branch: status.branch || '(detached HEAD)',
-                WorkingTree: status.workingTree,
-                Origin: status.origin,
-            })),
+            Object.fromEntries(
+                Array.from(statuses, ([repository, status]) => [
+                    repository,
+                    {
+                        Repository: repository,
+                        Branch: status.branch || '(detached HEAD)',
+                        WorkingTree: status.workingTree,
+                        Origin: status.origin,
+                    },
+                ]),
+            ),
         );
     }
 }
