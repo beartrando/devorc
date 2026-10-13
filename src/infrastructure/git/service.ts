@@ -9,11 +9,19 @@ type RepositoryOptions = {
     module?: boolean;
 };
 
+type RepositoryStatus = {
+    branch: string;
+    workingTree: 'clean' | 'dirty';
+    origin: 'ahead' | 'behind' | 'diverged' | 'up-to-date' | 'unknown';
+};
+
 export class GitService {
     private readonly serviceRepositories = new Map<string, string>();
     private readonly extraRepositories = new Map<string, string>();
     private readonly moduleRepositories = new Map<string, string>();
     private branchName = BranchName.create(DEFAULT_BRANCH_NAME);
+    private mode: RepositoryOptions = {};
+    private readonly repositoryStatuses = new Map<string, RepositoryStatus>();
 
     constructor(config: {
         gitServiceRepos: string[];
@@ -31,6 +39,29 @@ export class GitService {
         for (const repo of config.gitModuleRepos) {
             this.moduleRepositories.set(repo, repo);
         }
+    }
+
+    setMode(options: RepositoryOptions): void {
+        this.mode = { ...options };
+    }
+
+    getRepositories(options?: RepositoryOptions): Map<string, string> {
+        const { extra = false, module = false } = options ?? this.mode;
+        const repositories = new Map(this.serviceRepositories);
+
+        if (extra) {
+            for (const [name, path] of this.extraRepositories) {
+                repositories.set(name, path);
+            }
+        }
+
+        if (module) {
+            for (const [name, path] of this.moduleRepositories) {
+                repositories.set(name, path);
+            }
+        }
+
+        return repositories;
     }
 
     setBranch(name: string): void {

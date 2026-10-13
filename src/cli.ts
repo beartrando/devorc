@@ -1,40 +1,38 @@
-import { createInterface } from 'node:readline/promises';
-import { stdin as input, stdout as output } from 'node:process';
-import IssueCreateUseCase from "./application/use-cases/devorc/issue/issue-create";
-import IssueFlushUseCase from "./application/use-cases/devorc/issue/issue-flush";
-import IssueSelectUseCase from "./application/use-cases/devorc/issue/issue-select";
-import ParkUseCase from "./application/use-cases/devorc/park";
-import PullUseCase from "./application/use-cases/devorc/pull";
-import PushUseCase from "./application/use-cases/devorc/push";
-import StatusUseCase from "./application/use-cases/devorc/status";
-import DevorcController from "./infrastructure/http/controllers/devorc.controller";
-import HealthUseCase from "./application/use-cases/health/health";
-import StatusUseCase from "./application/use-cases/health/status";
-import LivezUseCase from "./application/use-cases/health/livez";
-import ReadyzUseCase from "./application/use-cases/health/readyz";
-import DbService from "./infrastructure/db/service";
+import {createInterface} from 'node:readline/promises';
+import {stdin as input, stdout as output} from 'node:process';
+
+import IssueCreateUseCase from './application/use-cases/devorc/issue/issue-create';
+import IssueFlushUseCase from './application/use-cases/devorc/issue/issue-flush';
+import IssueSelectUseCase from './application/use-cases/devorc/issue/issue-select';
+import ParkUseCase from './application/use-cases/devorc/park';
+import PullUseCase from './application/use-cases/devorc/pull';
+import PushUseCase from './application/use-cases/devorc/push';
+import IssueStatusUseCase from './application/use-cases/devorc/status';
+import HealthUseCase from './application/use-cases/health/health';
+import DbService from './infrastructure/db/service';
+import GithubService from './infrastructure/github/service';
+import GitService from './infrastructure/git/service';
+import gitConfig from './infrastructure/git/config';
+
 
 
 
 const dbService = new DbService();
-
 const healthUseCase = new HealthUseCase(dbService);
-// const statusUseCase = new StatusUseCase;
-// const livezUseCase = new LivezUseCase;
-// const readyzUseCase = new ReadyzUseCase;
 
-const issueCreateUseCase = new IssueCreateUseCase();
-const issueFlushUseCase = new IssueFlushUseCase();
-const issueSelectUseCase = new IssueSelectUseCase();
-const pullUseCase = new PullUseCase();
-const pushUseCase = new PushUseCase();
-const parkUseCase = new ParkUseCase();
-const issueStatusUseCase = new IssueStatusUseCase();
+const githubService = new GithubService();
+const gitService = new GitService(gitConfig);
 
-
+const issueCreateUseCase = new IssueCreateUseCase(githubService, gitService);
+const issueFlushUseCase = new IssueFlushUseCase(githubService, gitService);
+const issueSelectUseCase = new IssueSelectUseCase(githubService, gitService);
+const parkUseCase = new ParkUseCase(githubService, gitService);
+const pullUseCase = new PullUseCase(githubService, gitService);
+const pushUseCase = new PushUseCase(githubService, gitService);
+const issueStatusUseCase = new IssueStatusUseCase(githubService, gitService);
 
 export class Cli {
-    private readonly rl = createInterface({ input, output });
+    private readonly rl = createInterface({input, output});
 
     async start(): Promise<void> {
         try {
@@ -58,13 +56,13 @@ export class Cli {
                             await this.health();
                             break;
                         case '2':
-                            await this.issueCreate();
+                            await this.createIssue();
                             break;
                         case '3':
-                            await this.issueFlush();
+                            await this.flushIssue();
                             break;
                         case '4':
-                            await this.issueSelect();
+                            await this.selectIssue();
                             break;
                         case '5':
                             await this.pull();
@@ -92,39 +90,38 @@ export class Cli {
         }
     }
 
-
     private async health(): Promise<void> {
-        return await healthUseCase.execute();
+        await healthUseCase.execute();
     }
 
     private async createIssue(): Promise<void> {
-        //asc for issue name
-        return await createIssueUseCase.execute();
+        await issueCreateUseCase.execute();
     }
 
     private async flushIssue(): Promise<void> {
-        return await flushIssueUseCase.execute();
+        await issueFlushUseCase.execute();
     }
 
     private async selectIssue(): Promise<void> {
-        return await selectIssueUseCase.execute();
+        await issueSelectUseCase.execute();
     }
 
     private async pull(): Promise<void> {
-        return await pullUseCase.execute();
+        await pullUseCase.execute();
     }
 
     private async push(): Promise<void> {
-        return await pushUseCase.execute();
+        await pushUseCase.execute();
     }
 
     private async park(): Promise<void> {
-        return await parkUseCase.execute();
+        await parkUseCase.execute();
     }
 
     private async status(): Promise<void> {
-        return await statusUseCase.execute();
+        await issueStatusUseCase.execute();
     }
+
 }
 
 export default Cli;
