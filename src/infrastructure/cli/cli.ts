@@ -35,14 +35,15 @@ export class Cli {
 
         try {
             while (true) {
+                await this.status();
                 console.clear();
                 const choice = await this.selectMenu();
 
                 try {
                     switch (choice) {
-                        case 'Status':
-                            await this.status();
-                            break;
+                        // case 'Status':
+                        //     await this.status();
+                        //     break;
                         case 'Create issue':
                             await this.createIssue();
                             break;
@@ -76,7 +77,7 @@ export class Cli {
 
     private async selectMenu(): Promise<string> {
         const items = [
-            'Status',
+            // 'Status',
             'Create issue',
             'Flush issue',
             'Select issue',

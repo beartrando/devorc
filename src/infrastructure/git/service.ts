@@ -125,7 +125,7 @@ export class GitService {
                 });
             } catch {
                 this.repositoryStatuses.set(name, {
-                    branch: '',
+                    branch: 'ERROR',
                     workingTree: 'dirty',
                     origin: 'unknown',
                 });
