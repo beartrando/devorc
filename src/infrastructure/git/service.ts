@@ -95,6 +95,7 @@ export class GitService {
 
         for (const [name, path] of repositories) {
             try {
+                console.log('refresh')
                 const counts = await this.git(path, [
                     'fetch',
                 ]);

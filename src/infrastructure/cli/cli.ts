@@ -12,7 +12,6 @@ import IssueCreateUseCase from '../../application/use-cases/devorc/issue/issue-c
 import GitService from '../git/service';
 import Table from 'cli-table3';
 
-
 type MenuItem = {
     label: string;
     action: () => Promise<void> | void;
@@ -71,12 +70,16 @@ export class Cli {
     }
 
     async start(): Promise<void> {
-        emitKeypressEvents(input);
-        await this.gitService.calculateRepositoryStatuses({extra: true, module: true});
-
         if (!input.isTTY) {
             throw new Error('Interactive CLI requires a TTY');
         }
+
+        emitKeypressEvents(input);
+
+        await this.gitService.calculateRepositoryStatuses({
+            extra: true,
+            module: true,
+        });
 
         try {
             while (true) {
@@ -98,6 +101,9 @@ export class Cli {
             }
         } finally {
             this.rl.close();
+            if (input.isTTY) {
+                input.setRawMode(false);
+            }
         }
     }
 
@@ -107,6 +113,7 @@ export class Cli {
         const render = async () => {
             console.clear();
             await this.showRepositoryStatuses();
+
             console.log('\n=== DevOrc ===\n');
 
             items.forEach((item, index) => {
@@ -120,10 +127,10 @@ export class Cli {
             );
         };
 
-        input.setRawMode(true);
-        await render();
-
         try {
+            input.setRawMode(true);
+            await render();
+
             return await new Promise<string>((resolve) => {
                 const cleanup = () => {
                     input.removeListener('keypress', onKeypress);
@@ -135,10 +142,7 @@ export class Cli {
                 ) => {
                     if (
                         (key.ctrl && key.name === 'c') ||
-                        key.name === 'q' ||
-                        key.name === 'Q' ||
-                        key.name === 'й' ||
-                        key.name === 'Й'
+                        ['q', 'Q', 'й', 'Й'].includes(key.name ?? '')
                     ) {
                         cleanup();
                         resolve('Exit');
@@ -161,11 +165,11 @@ export class Cli {
                     if (key.name === 'up') {
                         this.selectedMenuIndex =
                             (this.selectedMenuIndex - 1 + items.length) % items.length;
-                        render();
+                        void render();
                     } else if (key.name === 'down') {
                         this.selectedMenuIndex =
                             (this.selectedMenuIndex + 1) % items.length;
-                        render();
+                        void render();
                     } else if (key.name === 'return') {
                         cleanup();
                         resolve(items[this.selectedMenuIndex]);
@@ -175,12 +179,15 @@ export class Cli {
                 input.on('keypress', onKeypress);
             });
         } finally {
-            input.setRawMode(false);
+            if (input.isTTY) {
+                input.setRawMode(false);
+            }
         }
     }
 
     private async refreshRepositoryStatuses(): Promise<void> {
         await this.gitService.refreshRepositoryStatuses();
+        await keypress()
     }
 
     private async createIssue(): Promise<void> {
@@ -217,7 +224,7 @@ export class Cli {
         const table = new Table({
             head: ['Repository', 'Branch', 'WorkingTree', 'Origin'],
             chars: {
-                'mid': '',
+                mid: '',
                 'left-mid': '',
                 'mid-mid': '',
                 'right-mid': '',
