@@ -55,7 +55,7 @@ export class Cli {
                         case 'Pull':
                             await this.pull();
                             break;
-                        case 'Push':
+                        case 'Commit and push all':
                             await this.push();
                             break;
                         case 'Park':
@@ -81,7 +81,7 @@ export class Cli {
             'Flush issue',
             'Select issue',
             'Pull',
-            'Push',
+            'Commit and push all',
             'Park',
             'Exit',
         ];

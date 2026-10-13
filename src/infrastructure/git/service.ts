@@ -84,6 +84,57 @@ export class GitService {
         return new Map(this.repositoryStatuses);
     }
 
+    async checkRepositoryStatuses(options?: RepositoryOptions): Promise<Map<string, RepositoryStatus>> {
+        const repositories = this.getRepositories(options);
+
+        for (const [name, path] of repositories) {
+            try {
+                const branch = await this.git(path, ['branch', '--show-current']);
+
+                const workingTree = await this.git(path, ['status', '--porcelain']);
+
+                let origin: RepositoryStatus['origin'] = 'unknown';
+
+                try {
+                    const counts = await this.git(path, [
+                        'rev-list',
+                        '--left-right',
+                        '--count',
+                        `HEAD...origin/${branch}`,
+                    ]);
+
+                    const [ahead, behind] = counts.split(/\s+/).map(Number);
+
+                    if (ahead > 0 && behind > 0) {
+                        origin = 'diverged';
+                    } else if (ahead > 0) {
+                        origin = 'ahead';
+                    } else if (behind > 0) {
+                        origin = 'behind';
+                    } else {
+                        origin = 'up-to-date';
+                    }
+                } catch {
+                    origin = 'unknown';
+                }
+
+                this.repositoryStatuses.set(name, {
+                    branch,
+                    workingTree: workingTree ? 'dirty' : 'clean',
+                    origin,
+                });
+            } catch {
+                this.repositoryStatuses.set(name, {
+                    branch: '',
+                    workingTree: 'dirty',
+                    origin: 'unknown',
+                });
+            }
+        }
+
+        return this.getRepositoryStatuses();
+    }
+
     private async git(
         path: string,
         args: string[],

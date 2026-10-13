@@ -13,11 +13,8 @@ export class RefreshStatusUseCase {
 
 
     async execute(): Promise<Object> {
-        // return this.gitService.checkStatus
-        return {
-            status: 'RefreshStatusUseCase',
-        };
-
+        const result = this.gitService.checkRepositoryStatuses();
+        return result;
     }
 }
 
