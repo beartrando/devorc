@@ -9,13 +9,13 @@ export class DevorcRouter {
         private readonly devorcController: DevorcController,
     ) {
         this.router = Router();
-        this.router.get("/issue/create", this.devorcController.issueCreate,);
-        this.router.get("/issue/flush", this.devorcController.issueFlush,);
-        this.router.get("/issue/select", this.devorcController.issueSelect,);
-        this.router.get("/park", this.devorcController.park,);
-        this.router.get("/pull", this.devorcController.pull,);
-        this.router.get("/push", this.devorcController.push,);
-        this.router.get("/status", this.devorcController.status,);
+        this.router.post("/issue/create", this.devorcController.issueCreate,);
+        this.router.post("/issue/flush", this.devorcController.issueFlush,);
+        this.router.post("/issue/select", this.devorcController.issueSelect,);
+        this.router.post("/park", this.devorcController.park,);
+        this.router.post("/pull", this.devorcController.pull,);
+        this.router.post("/push", this.devorcController.push,);
+        this.router.post("/status", this.devorcController.status,);
     }
 }
 
