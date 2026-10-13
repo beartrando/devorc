@@ -10,6 +10,8 @@ import PushUseCase from '../../application/use-cases/devorc/push';
 import RefreshStatusUseCase from '../../application/use-cases/devorc/refresh-status';
 import IssueCreateUseCase from '../../application/use-cases/devorc/issue/issue-create';
 import GitService from '../git/service';
+import Table from 'cli-table3';
+
 
 type MenuItem = {
     label: string;
@@ -21,6 +23,10 @@ export class Cli {
     private selectedMenuIndex = 0;
 
     private readonly menu: MenuItem[] = [
+        {
+            label: 'Refresh status',
+            action: () => this.refreshRepositoryStatuses(),
+        },
         {
             label: 'Create issue',
             action: () => this.createIssue(),
@@ -47,7 +53,8 @@ export class Cli {
         },
         {
             label: 'Exit',
-            action: () => {},
+            action: () => {
+            },
         },
     ];
 
@@ -60,10 +67,12 @@ export class Cli {
         private readonly pullUseCase: PullUseCase,
         private readonly pushUseCase: PushUseCase,
         private readonly statusUseCase: RefreshStatusUseCase,
-    ) {}
+    ) {
+    }
 
     async start(): Promise<void> {
         emitKeypressEvents(input);
+        await this.gitService.calculateRepositoryStatuses({extra: true, module: true});
 
         if (!input.isTTY) {
             throw new Error('Interactive CLI requires a TTY');
@@ -72,7 +81,6 @@ export class Cli {
         try {
             while (true) {
                 await this.status();
-                console.clear();
 
                 const choice = await this.selectMenu();
                 const item = this.menu.find(({label}) => label === choice);
@@ -93,13 +101,12 @@ export class Cli {
         }
     }
 
-
     private async selectMenu(): Promise<string> {
         const items = this.menu.map(({label}) => label);
 
-        const render = () => {
+        const render = async () => {
             console.clear();
-            this.showRepositoryStatuses();
+            await this.showRepositoryStatuses();
             console.log('\n=== DevOrc ===\n');
 
             items.forEach((item, index) => {
@@ -108,12 +115,13 @@ export class Cli {
                 );
             });
 
-            const items = this.menu.map(({label}) => label);
-            console.log(`\n↑ ↓ Navigate · 1–${items.length} Select · Enter Confirm · Q Exit`);
+            console.log(
+                `\n↑ ↓ Navigate · 1–${items.length} Select · Enter Confirm · Q Exit`,
+            );
         };
 
         input.setRawMode(true);
-        render();
+        await render();
 
         try {
             return await new Promise<string>((resolve) => {
@@ -123,7 +131,7 @@ export class Cli {
 
                 const onKeypress = (
                     _str: string,
-                    key: {name?: string; ctrl?: boolean},
+                    key: { name?: string; ctrl?: boolean },
                 ) => {
                     if (
                         (key.ctrl && key.name === 'c') ||
@@ -171,6 +179,10 @@ export class Cli {
         }
     }
 
+    private async refreshRepositoryStatuses(): Promise<void> {
+        await this.gitService.refreshRepositoryStatuses();
+    }
+
     private async createIssue(): Promise<void> {
         const name = await this.rl.question('Enter branch name: ');
         await this.issueCreateUseCase.execute(name);
@@ -200,22 +212,34 @@ export class Cli {
         await this.statusUseCase.execute();
     }
 
-    private showRepositoryStatuses(): void {
+    private async showRepositoryStatuses(): Promise<void> {
         const statuses = this.gitService.getRepositoryStatuses();
+        const table = new Table({
+            head: ['Repository', 'Branch', 'WorkingTree', 'Origin'],
+            chars: {
+                'mid': '',
+                'left-mid': '',
+                'mid-mid': '',
+                'right-mid': '',
+            },
+        });
 
-        console.table(
-            Object.fromEntries(
-                Array.from(statuses, ([repository, status]) => [
-                    repository,
-                    {
-                        Repository: repository,
-                        Branch: status.branch || '(detached HEAD)',
-                        WorkingTree: status.workingTree,
-                        Origin: status.origin,
-                    },
-                ]),
-            ),
-        );
+        for (const [repository, status] of statuses) {
+            const row = [
+                repository,
+                status.branch || '(detached HEAD)',
+                status.workingTree,
+                status.origin,
+            ];
+
+            table.push(
+                status.workingTree !== 'dirty'
+                    ? row.map(value => `\x1b[36m${value}\x1b[0m`)
+                    : row,
+            );
+        }
+
+        console.log(table.toString());
     }
 }
 

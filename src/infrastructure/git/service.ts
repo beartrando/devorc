@@ -1,6 +1,7 @@
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import BranchName, {DEFAULT_BRANCH_NAME} from "./branch/value-objects/branch-name.vo";
+import {resolve} from 'node:path';
 
 const execFileAsync = promisify(execFile);
 
@@ -23,11 +24,16 @@ export class GitService {
     private mode: RepositoryOptions = {};
     private readonly repositoryStatuses = new Map<string, RepositoryStatus>();
 
+    private readonly projectDir: string;
+
     constructor(config: {
+        projectDir: string;
         gitServiceRepos: string[];
         gitExtraRepos: string[];
         gitModuleRepos: string[];
     }) {
+        this.projectDir = config.projectDir;
+
         for (const repo of config.gitServiceRepos) {
             this.serviceRepositories.set(repo, repo);
         }
@@ -84,7 +90,23 @@ export class GitService {
         return new Map(this.repositoryStatuses);
     }
 
-    async checkRepositoryStatuses(options?: RepositoryOptions): Promise<Map<string, RepositoryStatus>> {
+    async refreshRepositoryStatuses(options?: RepositoryOptions): Promise<void> {
+        const repositories = this.getRepositories(options);
+
+        for (const [name, path] of repositories) {
+            try {
+                const counts = await this.git(path, [
+                    'fetch',
+                ]);
+            } catch {
+                console.error('smth went wrong. git was not updated')
+            }
+
+        }
+    }
+
+    async calculateRepositoryStatuses(options?: RepositoryOptions): Promise<Map<string, RepositoryStatus>> {
+
         const repositories = this.getRepositories(options);
 
         for (const [name, path] of repositories) {
@@ -123,7 +145,9 @@ export class GitService {
                     workingTree: workingTree ? 'dirty' : 'clean',
                     origin,
                 });
-            } catch {
+            } catch (error) {
+                console.error(`Failed to check repository "${name}":`, error);
+
                 this.repositoryStatuses.set(name, {
                     branch: 'ERROR',
                     workingTree: 'dirty',
@@ -135,14 +159,11 @@ export class GitService {
         return this.getRepositoryStatuses();
     }
 
-    private async git(
-        path: string,
-        args: string[],
-    ): Promise<string> {
+    private async git(path: string, args: string[]): Promise<string> {
         const {stdout} = await execFileAsync(
             'git',
             args,
-            {cwd: path},
+            {cwd: resolve(this.projectDir, path)},
         );
 
         return stdout.trim();
