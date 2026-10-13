@@ -19,6 +19,7 @@ import PushUseCase from "../application/use-cases/devorc/push";
 import IssueCreateUseCase from "../application/use-cases/devorc/issue/issue-create";
 import IssueStatusUseCase from "../application/use-cases/devorc/status";
 import PullUseCase from "../application/use-cases/devorc/pull";
+import gitConfig from "../infrastructure/git/config";
 
 function buildApplication(): Application {
 
@@ -37,15 +38,15 @@ function buildApplication(): Application {
     );
 
     const githubService = new GithubService();
-    const gitService = new GitService();
+    const gitService = new GitService(gitConfig);
 
-    const issueCreateUseCase = new IssueCreateUseCase();
+    const issueCreateUseCase = new IssueCreateUseCase(githubService, gitService);
     const issueFlushUseCase = new IssueFlushUseCase(githubService, gitService);
-    const issueSelectUseCase = new IssueSelectUseCase();
-    const parkUseCase = new ParkUseCase();
-    const pullUseCase = new PullUseCase();
-    const pushUseCase = new PushUseCase();
-    const issueStatusUseCase = new IssueStatusUseCase();
+    const issueSelectUseCase = new IssueSelectUseCase(githubService, gitService);
+    const parkUseCase = new ParkUseCase(githubService, gitService);
+    const pullUseCase = new PullUseCase(githubService, gitService);
+    const pushUseCase = new PushUseCase(githubService, gitService);
+    const issueStatusUseCase = new IssueStatusUseCase(githubService, gitService);
 
     const devorcController = new DevorcController(
         issueCreateUseCase,

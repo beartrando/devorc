@@ -13,7 +13,7 @@ export class StatusUseCase {
 
 
     async execute(): Promise<Object> {
-        return gitService.checkStatus
+        // return this.gitService.checkStatus
         return {
             status: 'StatusUseCase',
         };

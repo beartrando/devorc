@@ -116,9 +116,10 @@ export class GitService {
 
 
     async commit(
-        message: string,
+        message?: string,
         options: RepositoryOptions = {},
     ): Promise<void> {
+        message = message || this.branchName.value;
         await this.executeForAll(async (name, path) => {
             await this.git(path, ['add', '-A']);
 
@@ -150,9 +151,10 @@ export class GitService {
     }
 
     async commitAndPush(
-        message: string,
+        message?: string,
         options: RepositoryOptions = {},
     ): Promise<void> {
+        message = message || this.branchName.value
         // Stage 1: verify and switch all repositories.
         await this.checkoutBranches(options);
 
@@ -178,9 +180,10 @@ export class GitService {
     }
 
     async park(
-        message: string,
+        message?: string,
         options: RepositoryOptions = {},
     ): Promise<void> {
+        message = message || this.branchName.value;
         // Stage 1: verify and switch all repositories.
         await this.commitAndPush(message, options);
 

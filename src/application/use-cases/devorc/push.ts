@@ -13,9 +13,7 @@ export class PushUseCase {
 
 
     async execute(): Promise<Object> {
-        gitService.commit();
-        gitService.pull();
-        gitService.push();
+        this.gitService.commitAndPush();
         return {
             status: 'PushUseCase',
         };
