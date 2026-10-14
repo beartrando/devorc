@@ -13,6 +13,7 @@ export class PushUseCase {
 
 
     async execute(): Promise<void> {
+        await this.githubService.commitAndPushAndCreatePullRequests();
         this.gitService.commitAndPush();
     }
 }

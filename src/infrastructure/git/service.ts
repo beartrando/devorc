@@ -216,21 +216,26 @@ export class GitService {
 
     async checkoutBranch(path: string, branchName: BranchName): Promise<void> {
         const currentBranch = await this.currentBranch(path);
+        if(проверь, были ли изменения в текущей ветке и только если да) {
+            if (currentBranch !== branchName.value) {
+                const branches = await this.git(path, [
+                    'branch',
+                    '--list',
+                    branchName.value,
+                ]);
 
-        if (currentBranch !== branchName.value) {
-            const branches = await this.git(path, [
-                'branch',
-                '--list',
-                branchName.value,
-            ]);
+                if (branches) {
+                    await this.git(path, ['switch', branchName.value]);
+                } else {
+                    await this.git(path, ['switch', '-c', branchName.value]);
+                }
 
-            if (branches) {
-                await this.git(path, ['switch', branchName.value]);
-            } else {
-                await this.git(path, ['switch', '-c', branchName.value]);
+                if(проверь, есть ли такая удаленная ветка) {
+                    await this.git(path, ['pull', 'origin', branchName.value,]);
+                }
             }
+
         }
-        await this.git(path, ['pull', 'origin', branchName.value,]);
     }
 
     async checkoutBranches(branchName?: BranchName): Promise<void> {
