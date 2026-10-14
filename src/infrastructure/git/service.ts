@@ -315,8 +315,11 @@ export class GitService {
     }
 
     async getProjectRepo(): Promise<string> {
-        return await this.git('.', ['repo', 'view', '--json', 'nameWithOwner', '--jq', '.nameWithOwner']);
+        const url = await this.git('.', ['remote', 'get-url', 'origin']);
 
+        return url
+            .replace(/\.git$/, '')
+            .replace(/^.*github\.com[:/]/, '');
     }
 
     async checkoutBaseBranch(branchName: string): Promise<void> {
