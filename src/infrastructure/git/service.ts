@@ -5,11 +5,6 @@ import {resolve} from 'node:path';
 
 const execFileAsync = promisify(execFile);
 
-type RepositoryOptions = {
-    extra?: boolean;
-    module?: boolean;
-};
-
 type RepositoryStatus = {
     branch: string;
     workingTree: 'clean' | 'dirty';
@@ -20,9 +15,9 @@ export class GitService {
     private readonly serviceRepositories = new Map<string, string>();
     private readonly extraRepositories = new Map<string, string>();
     private readonly moduleRepositories = new Map<string, string>();
-    private branchName = BranchName.create(DEFAULT_BRANCH_NAME);
-    private mode: RepositoryOptions = {};
     private readonly repositoryStatuses = new Map<string, RepositoryStatus>();
+
+    private basePath = '.';
 
     private readonly projectDir: string;
 
@@ -35,6 +30,13 @@ export class GitService {
 
     getModulesRepositoriesEnabled(): boolean {
         return this.modulesRepositoriesEnabled;
+    }
+
+    createBranchName(issueId: string, title: string): BranchName {
+        const id = issueId.match(/(\d+)$/)?.[1] ?? issueId;
+        const slug = title.trim().replace(/\s+/g, '-').toLowerCase();
+
+        return BranchName.create(`${id}-${slug}`);
     }
 
     toggleExtraRepositoriesEnabled(): void {
@@ -67,12 +69,7 @@ export class GitService {
         }
     }
 
-    setMode(options: RepositoryOptions): void {
-        this.mode = {...options};
-    }
-
-    getRepositories(options?: RepositoryOptions): Map<string, string> {
-        const {extra = false, module = false} = options ?? this.mode;
+    getRepositories(): Map<string, string> {
         const repositories = new Map<string, string>([
             ['base', this.projectDir],
         ]);
@@ -96,8 +93,8 @@ export class GitService {
         return repositories;
     }
 
-    setBranch(name: string): void {
-        this.branchName = BranchName.create(name);
+    async setBranch(name: BranchName): Promise<void> {
+        await this.checkoutBranch(this.basePath, name);
     }
 
     addServiceRepository(name: string, path: string): void {
@@ -116,8 +113,8 @@ export class GitService {
         return new Map(this.repositoryStatuses);
     }
 
-    async refreshRepositoryStatuses(options?: RepositoryOptions): Promise<void> {
-        const repositories = this.getRepositories(options);
+    async refreshRepositoryStatuses(): Promise<void> {
+        const repositories = this.getRepositories();
 
         for (const [name, path] of repositories) {
             try {
@@ -132,9 +129,13 @@ export class GitService {
         }
     }
 
-    async calculateRepositoryStatuses(options?: RepositoryOptions): Promise<Map<string, RepositoryStatus>> {
+    async getBaseBranch(): Promise<BranchName> {
+        return BranchName.create(await this.git(this.basePath, ['branch', '--show-current']));
+    }
 
-        const repositories = this.getRepositories(options);
+    async calculateRepositoryStatuses(): Promise<Map<string, RepositoryStatus>> {
+
+        const repositories = this.getRepositories();
 
         for (const [name, path] of repositories) {
             try {
@@ -205,33 +206,41 @@ export class GitService {
         }
     }
 
-    async checkoutBranches(options?: RepositoryOptions): Promise<void> {
-        const repositories = this.getRepositories(options);
+    async currentBranch(path: string): Promise<string> {
+        return await this.git(path, [
+            'branch',
+            '--show-current',
+        ]);
+    }
+
+
+    async checkoutBranch(path: string, branchName: BranchName): Promise<void> {
+        const currentBranch = await this.currentBranch(path);
+
+        if (currentBranch !== branchName.value) {
+            const branches = await this.git(path, [
+                'branch',
+                '--list',
+                branchName.value,
+            ]);
+
+            if (branches) {
+                await this.git(path, ['switch', branchName.value]);
+            } else {
+                await this.git(path, ['switch', '-c', branchName.value]);
+            }
+        }
+        await this.git(path, ['pull', 'origin', branchName.value,]);
+    }
+
+    async checkoutBranches(branchName?: BranchName): Promise<void> {
+        branchName ??= await this.getBaseBranch();
+        const repositories = this.getRepositories();
         const errors: string[] = [];
 
         for (const [name, path] of repositories) {
             try {
-                const currentBranch = await this.git(path, [
-                    'branch',
-                    '--show-current',
-                ]);
-
-                if (currentBranch !== this.branchName.value) {
-                    try {
-                        await this.git(path, [
-                            'switch',
-                            this.branchName.value,
-                        ]);
-                    } catch {
-                        await this.git(path, [
-                            'switch',
-                            '--track',
-                            '-c',
-                            this.branchName.value,
-                            `origin/${this.branchName.value}`,
-                        ]);
-                    }
-                }
+                await this.checkoutBranch(path, branchName);
             } catch (error) {
                 const message = error instanceof Error
                     ? error.message
@@ -243,16 +252,42 @@ export class GitService {
 
         if (errors.length > 0) {
             throw new Error(
-                `Failed to switch repositories to branch "${this.branchName.value}":\n${errors.join('\n')}`,
+                `Failed to switch repositories to branch "${branchName.value}":\n${errors.join('\n')}`,
             );
         }
     }
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     async commit(
         message?: string,
-        options?: RepositoryOptions,
     ): Promise<void> {
-        message = message || this.branchName.value;
+        const branchName = await this.getBaseBranch();
+        message = message || branchName.value;
 
         await this.executeForAll(async (name, path) => {
             await this.git(path, ['add', '-A']);
@@ -267,55 +302,57 @@ export class GitService {
             } else {
                 console.log(`${name}: nothing to commit`);
             }
-        }, this.getRepositories(options));
+        }, this.getRepositories());
     }
 
-    async pull(options?: RepositoryOptions): Promise<void> {
+    async pull(): Promise<void> {
         await this.executeForAll(async (name, path) => {
             console.log(`${name}: pulling`);
             await this.git(path, ['pull']);
-        }, this.getRepositories(options));
+        }, this.getRepositories());
     }
 
-    async push(options?: RepositoryOptions): Promise<void> {
+    async push(): Promise<void> {
         await this.executeForAll(async (name, path) => {
             console.log(`${name}: pushing`);
             await this.git(path, ['push']);
-        }, this.getRepositories(options));
+        }, this.getRepositories());
     }
 
     async commitAndPush(
         message?: string,
-        options?: RepositoryOptions,
     ): Promise<void> {
-        message = message || this.branchName.value;
+        const branchName = await this.getBaseBranch();
 
-        await this.checkoutBranches(options);
-        await this.commit(message, options);
-        await this.pull(options);
-        await this.push(options);
+        message = message || branchName.value;
+
+        await this.checkoutBranches(branchName);
+        await this.commit(message);
+        await this.pull();
+        await this.push();
     }
 
-    async checkoutAndPull(options?: RepositoryOptions): Promise<void> {
-        await this.checkoutBranches(options);
-        await this.pull(options);
+    async checkoutAndPull(): Promise<void> {
+        await this.checkoutBranches();
+        await this.pull();
     }
 
     async park(
         message?: string,
-        options?: RepositoryOptions,
     ): Promise<void> {
-        message = message || this.branchName.value;
+        const branchName = await this.getBaseBranch();
 
-        await this.commitAndPush(message, options);
+        message = message || branchName.value;
 
-        this.setBranch(DEFAULT_BRANCH_NAME);
-        await this.checkoutBranches(options);
-        await this.pull(options);
+        await this.commitAndPush(message);
+
+        this.setBranch(BranchName.create(DEFAULT_BRANCH_NAME));
+        await this.checkoutBranches();
+        await this.pull();
     }
 
     async getProjectRepo(): Promise<string> {
-        const url = await this.git('.', ['remote', 'get-url', 'origin']);
+        const url = await this.git(this.basePath, ['remote', 'get-url', 'origin']);
 
         return url
             .replace(/\.git$/, '')
@@ -323,16 +360,16 @@ export class GitService {
     }
 
     async checkoutBaseBranch(branchName: string): Promise<void> {
-        const branches = await this.git('.', [
+        const branches = await this.git(this.basePath, [
             'branch',
             '--list',
             branchName,
         ]);
 
         if (branches) {
-            await this.git('.', ['checkout', branchName]);
+            await this.git(this.basePath, ['checkout', branchName]);
         } else {
-            await this.git('.', ['checkout', '-b', branchName]);
+            await this.git(this.basePath, ['checkout', '-b', branchName]);
         }
     }
 }

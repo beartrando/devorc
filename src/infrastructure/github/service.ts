@@ -16,7 +16,6 @@ export class GithubService {
             this.repo = await this.gitService.getProjectRepo();
         }
 
-        console.log(this.repo)
         return this.repo;
     }
 
@@ -26,11 +25,13 @@ export class GithubService {
     }
 
     async createIssue(title: string): Promise<string> {
-        return await this.getRepo();
-        // return this.execute([
-        //     'issue', 'create',
-        //     '--title', title,
-        // ]);
+        const result = await this.execute([
+            'issue', 'create',
+            '--title', title,
+            '--repo', await this.gitService.getProjectRepo(),
+            '--body', '',
+        ]);
+        return result;
     }
 
     async createPullRequest(title: string, base: string) {

@@ -32,12 +32,12 @@ export class Cli {
             action: () => this.createIssue(),
         },
         {
-            label: 'Flush issue',
-            action: () => this.flushIssue(),
-        },
-        {
             label: 'Select issue',
             action: () => this.selectIssue(),
+        },
+        {
+            label: 'Flush issue',
+            action: () => this.flushIssue(),
         },
         {
             label: 'Pull',
@@ -86,10 +86,7 @@ export class Cli {
 
         emitKeypressEvents(input);
 
-        await this.gitService.calculateRepositoryStatuses({
-            extra: true,
-            module: true,
-        });
+        await this.gitService.calculateRepositoryStatuses();
 
         try {
             while (true) {
