@@ -1,19 +1,36 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import GitService from "../git/service";
 
 const execFileAsync = promisify(execFile);
 
 export class GithubService {
+    private repo?: string;
+
+    constructor(
+        private readonly gitService: GitService,
+    ) {}
+
+    async getRepo(): Promise<string> {
+        if (!this.repo) {
+            this.repo = await this.gitService.getProjectRepo();
+        }
+
+        console.log(this.repo)
+        return this.repo;
+    }
+
     async execute(args: string[]) {
         const { stdout } = await execFileAsync('gh', args);
         return stdout.trim();
     }
 
-    async createIssue(title: string) {
-        return this.execute([
-            'issue', 'create',
-            '--title', title,
-        ]);
+    async createIssue(title: string): Promise<string> {
+        return await this.getRepo();
+        // return this.execute([
+        //     'issue', 'create',
+        //     '--title', title,
+        // ]);
     }
 
     async createPullRequest(title: string, base: string) {

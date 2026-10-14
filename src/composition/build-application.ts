@@ -21,6 +21,7 @@ import RefreshStatusUseCase from "../application/use-cases/devorc/refresh-status
 import PullUseCase from "../application/use-cases/devorc/pull";
 import gitConfig from "../infrastructure/git/config";
 import Cli from "../infrastructure/cli/cli";
+import CalculateStatusUseCase from "../application/use-cases/devorc/calculate-status";
 
 
 const dbService = new DbService();
@@ -37,8 +38,9 @@ const healthController = new HealthController(
     readyzUseCase,
 );
 
-const githubService = new GithubService();
 const gitService = new GitService(gitConfig);
+
+const githubService = new GithubService(gitService);
 
 const issueCreateUseCase = new IssueCreateUseCase(githubService, gitService);
 const issueFlushUseCase = new IssueFlushUseCase(githubService, gitService);
@@ -47,6 +49,7 @@ const parkUseCase = new ParkUseCase(githubService, gitService);
 const pullUseCase = new PullUseCase(githubService, gitService);
 const pushUseCase = new PushUseCase(githubService, gitService);
 const refreshStatusUseCase = new RefreshStatusUseCase(githubService, gitService);
+const calculateStatusUseCase = new CalculateStatusUseCase(githubService, gitService);
 
 const devorcController = new DevorcController(
     issueCreateUseCase,
@@ -84,6 +87,7 @@ export function buildCli(): Cli {
         parkUseCase,
         pullUseCase,
         pushUseCase,
+        calculateStatusUseCase,
         refreshStatusUseCase
     );
 

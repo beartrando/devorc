@@ -7,10 +7,11 @@ import IssueSelectUseCase from '../../application/use-cases/devorc/issue/issue-s
 import ParkUseCase from '../../application/use-cases/devorc/park';
 import PullUseCase from '../../application/use-cases/devorc/pull';
 import PushUseCase from '../../application/use-cases/devorc/push';
-import RefreshStatusUseCase from '../../application/use-cases/devorc/refresh-status';
 import IssueCreateUseCase from '../../application/use-cases/devorc/issue/issue-create';
 import GitService from '../git/service';
 import Table from 'cli-table3';
+import CalculateStatusUseCase from "../../application/use-cases/devorc/calculate-status";
+import RefreshStatusUseCase from "../../application/use-cases/devorc/refresh-status";
 
 type MenuItem = {
     label: string;
@@ -51,6 +52,14 @@ export class Cli {
             action: () => this.park(),
         },
         {
+            label: 'Extra repositories: OFF/ON',
+            action: () => this.gitService.toggleExtraRepositoriesEnabled(),
+        },
+        {
+            label: 'Module repositories: OFF/ON',
+            action: () => this.gitService.toggleModulesRepositoriesEnabled(),
+        },
+        {
             label: 'Exit',
             action: () => {
             },
@@ -65,7 +74,8 @@ export class Cli {
         private readonly parkUseCase: ParkUseCase,
         private readonly pullUseCase: PullUseCase,
         private readonly pushUseCase: PushUseCase,
-        private readonly statusUseCase: RefreshStatusUseCase,
+        private readonly calculateStatusUseCase: CalculateStatusUseCase,
+        private readonly refreshStatusUseCase: RefreshStatusUseCase,
     ) {
     }
 
@@ -96,11 +106,12 @@ export class Cli {
                     await item?.action();
                 } catch (error) {
                     console.error('Error:', error);
-                    await this.rl.question('\nPress Enter to continue...');
+                    await this.keypress();
                 }
             }
         } finally {
             this.rl.close();
+
             if (input.isTTY) {
                 input.setRawMode(false);
             }
@@ -185,42 +196,71 @@ export class Cli {
         }
     }
 
+    private async keypress(): Promise<void> {
+        console.log('\nPress any key to continue...');
+
+        try {
+            input.setRawMode(true);
+
+            await new Promise<void>((resolve) => {
+                input.once('keypress', () => resolve());
+            });
+        } finally {
+            if (input.isTTY) {
+                input.setRawMode(false);
+            }
+        }
+    }
+
     private async refreshRepositoryStatuses(): Promise<void> {
-        await this.gitService.refreshRepositoryStatuses();
-        await keypress()
+        console.log('wait...');
+        await this.refreshStatusUseCase.execute();
+        await this.keypress();
     }
 
     private async createIssue(): Promise<void> {
         const name = await this.rl.question('Enter branch name: ');
+        console.log('wait...');
         await this.issueCreateUseCase.execute(name);
+        await this.keypress();
     }
 
     private async flushIssue(): Promise<void> {
         await this.issueFlushUseCase.execute();
+        await this.keypress();
     }
 
     private async selectIssue(): Promise<void> {
+        console.log('wait...');
         await this.issueSelectUseCase.execute();
+        await this.keypress();
     }
 
     private async pull(): Promise<void> {
+        console.log('wait...');
         await this.pullUseCase.execute();
+        await this.keypress();
     }
 
     private async push(): Promise<void> {
+        console.log('wait...');
         await this.pushUseCase.execute();
+        await this.keypress();
     }
 
     private async park(): Promise<void> {
+        console.log('wait...');
         await this.parkUseCase.execute();
+        await this.keypress();
     }
 
     private async status(): Promise<void> {
-        await this.statusUseCase.execute();
+        await this.calculateStatusUseCase.execute();
     }
 
     private async showRepositoryStatuses(): Promise<void> {
         const statuses = this.gitService.getRepositoryStatuses();
+
         const table = new Table({
             head: ['Repository', 'Branch', 'WorkingTree', 'Origin'],
             chars: {
@@ -247,6 +287,10 @@ export class Cli {
         }
 
         console.log(table.toString());
+        console.log(
+            'Extra: ' + (this.gitService.getExtraRepositoriesEnabled() ? 'On' : 'Off') + '. '
+            + 'Modules: ' + (this.gitService.getModulesRepositoriesEnabled() ? 'On' : 'Off')
+        );
     }
 }
 

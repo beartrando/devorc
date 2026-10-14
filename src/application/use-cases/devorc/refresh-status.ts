@@ -12,9 +12,8 @@ export class RefreshStatusUseCase {
     }
 
 
-    async execute(): Promise<Object> {
-        const result = this.gitService.calculateRepositoryStatuses();
-        return result;
+    async execute(): Promise<void> {
+        await this.gitService.refreshRepositoryStatuses();
     }
 }
 

@@ -11,11 +11,10 @@ export class IssueCreateUseCase {
     ) {
     }
 
-    async execute(title: string): Promise<Object> {
-        return {
-            status: 'IssueCreateUseCase',
-            title,
-        };
+    async execute(title: string): Promise<void> {
+        const brancName = await this.githubService.createIssue(title);
+        this.gitService.setBranch(brancName);
+        this.gitService.checkoutBaseBranch(brancName);
     }
 }
 

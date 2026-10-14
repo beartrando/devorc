@@ -26,6 +26,26 @@ export class GitService {
 
     private readonly projectDir: string;
 
+    private extraRepositoriesEnabled = false;
+    private modulesRepositoriesEnabled = false;
+
+    getExtraRepositoriesEnabled(): boolean {
+        return this.extraRepositoriesEnabled;
+    }
+
+    getModulesRepositoriesEnabled(): boolean {
+        return this.modulesRepositoriesEnabled;
+    }
+
+    toggleExtraRepositoriesEnabled(): void {
+        this.extraRepositoriesEnabled = !this.extraRepositoriesEnabled;
+    }
+
+    toggleModulesRepositoriesEnabled(): void {
+        this.modulesRepositoriesEnabled = !this.modulesRepositoriesEnabled;
+
+    }
+
     constructor(config: {
         projectDir: string;
         gitServiceRepos: string[];
@@ -53,15 +73,21 @@ export class GitService {
 
     getRepositories(options?: RepositoryOptions): Map<string, string> {
         const {extra = false, module = false} = options ?? this.mode;
-        const repositories = new Map(this.serviceRepositories);
+        const repositories = new Map<string, string>([
+            ['base', this.projectDir],
+        ]);
 
-        if (extra) {
+        for (const [name, path] of this.serviceRepositories) {
+            repositories.set(name, path);
+        }
+
+        if (this.extraRepositoriesEnabled) {
             for (const [name, path] of this.extraRepositories) {
                 repositories.set(name, path);
             }
         }
 
-        if (module) {
+        if (this.modulesRepositoriesEnabled) {
             for (const [name, path] of this.moduleRepositories) {
                 repositories.set(name, path);
             }
@@ -95,7 +121,7 @@ export class GitService {
 
         for (const [name, path] of repositories) {
             try {
-                console.log('refresh')
+                console.log('Refresh', name);
                 const counts = await this.git(path, [
                     'fetch',
                 ]);
@@ -286,6 +312,25 @@ export class GitService {
         this.setBranch(DEFAULT_BRANCH_NAME);
         await this.checkoutBranches(options);
         await this.pull(options);
+    }
+
+    async getProjectRepo(): Promise<string> {
+        return await this.git('.', ['repo', 'view', '--json', 'nameWithOwner', '--jq', '.nameWithOwner']);
+
+    }
+
+    async checkoutBaseBranch(branchName: string): Promise<void> {
+        const branches = await this.git('.', [
+            'branch',
+            '--list',
+            branchName,
+        ]);
+
+        if (branches) {
+            await this.git('.', ['checkout', branchName]);
+        } else {
+            await this.git('.', ['checkout', '-b', branchName]);
+        }
     }
 }
 
