@@ -1,6 +1,6 @@
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
-import BranchName, {DEFAULT_BRANCH_NAME} from "./branch/value-objects/branch-name.vo";
+import BranchName from "./branch/value-objects/branch-name.vo";
 import {resolve} from 'node:path';
 
 const execFileAsync = promisify(execFile);
@@ -198,62 +198,39 @@ export class GitService {
         return this.getRepositoryStatuses();
     }
 
-    private async git(path: string, args: string[]): Promise<string> {
-        const {stdout} = await execFileAsync(
-            'git',
-            args,
-            {cwd: resolve(this.projectDir, path)},
-        );
-
-        return stdout.trim();
-    }
-
-    async currentBranch(path: string): Promise<string> {
-        return await this.git(path, [
+    async currentBranch(path: string): Promise<BranchName> {
+        return BranchName.create(await this.git(path, [
             'branch',
             '--show-current',
-        ]);
+        ]));
     }
-
 
     async checkoutBranch(path: string, branchName: BranchName): Promise<void> {
         const currentBranch = await this.currentBranch(path);
+
+        const branches = await this.git(path, [
+            'branch',
+            '--list',
+            branchName.value,
+        ]);
+
+        if (branches) {
+            await this.git(path, ['switch', branchName.value]);
+        }
+
         const changes = await this.git(path, [
             'status',
             '--porcelain',
         ]);
 
-        if (changes) {
-            if (currentBranch !== branchName.value) {
-                const branches = await this.git(path, [
-                    'branch',
-                    '--list',
-                    branchName.value,
-                ]);
-
-                if (branches) {
-                    await this.git(path, ['switch', branchName.value]);
-                } else {
-                    await this.git(path, ['switch', '-c', branchName.value]);
-                }
-            }
-
-            const remoteBranch = await this.git(path, [
-                'ls-remote',
-                '--heads',
-                'origin',
-                `refs/heads/${branchName.value}`,
-            ]);
-
-            if (remoteBranch) {
-                await this.git(path, ['pull', 'origin', branchName.value]);
-            }
-
+        if (changes && !currentBranch.equals(branchName) && !branches) {
+            await this.git(path, ['checkout', '-b', branchName.value]);
         }
     }
 
     async checkoutBranches(branchName?: BranchName): Promise<void> {
         branchName ??= await this.getBaseBranch();
+        console.log(branchName);
         const repositories = this.getRepositories();
         const errors: string[] = [];
 
@@ -277,7 +254,6 @@ export class GitService {
         }
     }
 
-
     getListOfAffectedBranches(): Set<BranchName> {
         return new Set(
             [...this.repositoryStatuses.values()]
@@ -286,92 +262,83 @@ export class GitService {
         );
     }
 
+    //
+    async getProjectRepo(): Promise<string> {
+        const url = await this.git(this.basePath, ['remote', 'get-url', 'origin']);
 
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    //
-    // async executeForAll(
-    //     operation: (name: string, path: string) => Promise<unknown>,
-    //     repositories: Map<string, string>,
-    // ): Promise<void> {
-    //     for (const [name, path] of repositories) {
-    //         await operation(name, path);
-    //     }
-    // }
+        return url
+            .replace(/\.git$/, '')
+            .replace(/^.*github\.com[:/]/, '');
+    }
 
-    // async commit(
-    //     message?: string,
-    // ): Promise<void> {
-    //     const branchName = await this.getBaseBranch();
-    //     message = message || branchName.value;
-    //
-    //     await this.executeForAll(async (name, path) => {
-    //         await this.git(path, ['add', '-A']);
-    //
-    //         const status = await this.git(path, [
-    //             'status',
-    //             '--porcelain',
-    //         ]);
-    //
-    //         if (status) {
-    //             await this.git(path, ['commit', '-m', message]);
-    //         } else {
-    //             console.log(`${name}: nothing to commit`);
-    //         }
-    //     }, this.getRepositories());
-    // }
-    //
-    // async pull(): Promise<void> {
-    //     await this.executeForAll(async (name, path) => {
-    //         console.log(`${name}: pulling`);
-    //         await this.git(path, ['pull']);
-    //     }, this.getRepositories());
-    // }
-    //
-    // async push(): Promise<void> {
-    //     await this.executeForAll(async (name, path) => {
-    //         console.log(`${name}: pushing`);
-    //         await this.git(path, ['push']);
-    //     }, this.getRepositories());
-    // }
-    //
-    // async commitAndPush(
-    //     message?: string,
-    // ): Promise<void> {
-    //     const branchName = await this.getBaseBranch();
-    //
-    //     message = message || branchName.value;
-    //
-    //     await this.checkoutBranches(branchName);
-    //     await this.commit(message);
-    //     await this.pull();
-    //     await this.push();
-    // }
-    //
+
+    async executeForAll(
+        operation: (name: string, path: string) => Promise<unknown>,
+        repositories: Map<string, string>,
+    ): Promise<void> {
+        for (const [name, path] of repositories) {
+            await operation(name, path);
+        }
+    }
+
+    async commit(
+        message?: string,
+    ): Promise<void> {
+        const branchName = await this.getBaseBranch();
+        message = message || branchName.value;
+
+        await this.executeForAll(async (name, path) => {
+            await this.git(path, ['add', '-A']);
+
+            const status = await this.git(path, [
+                'status',
+                '--porcelain',
+            ]);
+
+            if (status) {
+                await this.git(path, ['commit', '-m', message]);
+            } else {
+                console.log(`${name}: nothing to commit`);
+            }
+        }, this.getRepositories());
+    }
+
+    async pull(): Promise<void> {
+        await this.executeForAll(async (name, path) => {
+            console.log(`${name}: pulling`);
+            const remoteBranch = await this.git(path, [
+                'ls-remote',
+                '--heads',
+                'origin',
+                `refs/heads/${branchName.value}`,
+            ]);
+
+            if (remoteBranch) {
+                await this.git(path, ['pull', 'origin', branchName.value]);
+            }
+        }, this.getRepositories());
+    }
+
+    async push(): Promise<void> {
+        await this.executeForAll(async (name, path) => {
+            console.log(`${name}: pushing`);
+            await this.git(path, ['push']);
+        }, this.getRepositories());
+    }
+
+    async commitAndPush(
+        message?: string,
+    ): Promise<void> {
+        const branchName = await this.getBaseBranch();
+
+        message = message || branchName.value;
+
+        await this.checkoutBranches(branchName);
+        await this.commit(message);
+        await this.pull();
+        await this.push();
+    }
+
     // async checkoutAndPull(): Promise<void> {
     //     await this.checkoutBranches();
     //     await this.pull();
@@ -390,13 +357,15 @@ export class GitService {
     //     await this.checkoutBranches();
     //     await this.pull();
     // }
-    //
-    async getProjectRepo(): Promise<string> {
-        const url = await this.git(this.basePath, ['remote', 'get-url', 'origin']);
 
-        return url
-            .replace(/\.git$/, '')
-            .replace(/^.*github\.com[:/]/, '');
+    private async git(path: string, args: string[]): Promise<string> {
+        const {stdout} = await execFileAsync(
+            'git',
+            args,
+            {cwd: resolve(this.projectDir, path)},
+        );
+
+        return stdout.trim();
     }
 }
 

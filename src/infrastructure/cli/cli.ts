@@ -228,8 +228,9 @@ export class Cli {
     }
 
     private async selectIssue(): Promise<void> {
+        const id = await this.rl.question('Enter issue id: ');
         console.log('wait...');
-        await this.issueSelectUseCase.execute();
+        await this.issueSelectUseCase.execute(id);
         await this.keypress();
     }
 

@@ -5,111 +5,116 @@
 // source: common/response.proto
 
 /* eslint-disable */
-import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
-import { ErrorObject } from "./error";
+import {BinaryReader, BinaryWriter} from "@bufbuild/protobuf/wire";
+import {ErrorObject} from "./error";
 
 export const protobufPackage = "common.response";
 
 export interface SuccessResponse {
-  success?: boolean | undefined;
-  error?: ErrorObject | undefined;
+    success?: boolean | undefined;
+    error?: ErrorObject | undefined;
 }
 
 function createBaseSuccessResponse(): SuccessResponse {
-  return { success: undefined, error: undefined };
+    return {success: undefined, error: undefined};
 }
 
 export const SuccessResponse: MessageFns<SuccessResponse> = {
-  encode(message: SuccessResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.success !== undefined) {
-      writer.uint32(8).bool(message.success);
-    }
-    if (message.error !== undefined) {
-      ErrorObject.encode(message.error, writer.uint32(18).fork()).join();
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): SuccessResponse {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseSuccessResponse();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 8) {
-            break;
-          }
-
-          message.success = reader.bool();
-          continue;
+    encode(message: SuccessResponse, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+        if (message.success !== undefined) {
+            writer.uint32(8).bool(message.success);
         }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.error = ErrorObject.decode(reader, reader.uint32());
-          continue;
+        if (message.error !== undefined) {
+            ErrorObject.encode(message.error, writer.uint32(18).fork()).join();
         }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
+        return writer;
+    },
 
-  fromJSON(object: any): SuccessResponse {
-    return {
-      success: isSet(object.success) ? globalThis.Boolean(object.success) : undefined,
-      error: isSet(object.error) ? ErrorObject.fromJSON(object.error) : undefined,
-    };
-  },
+    decode(input: BinaryReader | Uint8Array, length?: number): SuccessResponse {
+        const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+        const end = length === undefined ? reader.len : reader.pos + length;
+        const message = createBaseSuccessResponse();
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1: {
+                    if (tag !== 8) {
+                        break;
+                    }
 
-  toJSON(message: SuccessResponse): unknown {
-    const obj: any = {};
-    if (message.success !== undefined) {
-      obj.success = message.success;
-    }
-    if (message.error !== undefined) {
-      obj.error = ErrorObject.toJSON(message.error);
-    }
-    return obj;
-  },
+                    message.success = reader.bool();
+                    continue;
+                }
+                case 2: {
+                    if (tag !== 18) {
+                        break;
+                    }
 
-  create(base?: DeepPartial<SuccessResponse>): SuccessResponse {
-    return SuccessResponse.fromPartial(base ?? {});
-  },
-  fromPartial(object: DeepPartial<SuccessResponse>): SuccessResponse {
-    const message = createBaseSuccessResponse();
-    message.success = object.success ?? undefined;
-    message.error = (object.error !== undefined && object.error !== null)
-      ? ErrorObject.fromPartial(object.error)
-      : undefined;
-    return message;
-  },
+                    message.error = ErrorObject.decode(reader, reader.uint32());
+                    continue;
+                }
+            }
+            if ((tag & 7) === 4 || tag === 0) {
+                break;
+            }
+            reader.skip(tag & 7);
+        }
+        return message;
+    },
+
+    fromJSON(object: any): SuccessResponse {
+        return {
+            success: isSet(object.success) ? globalThis.Boolean(object.success) : undefined,
+            error: isSet(object.error) ? ErrorObject.fromJSON(object.error) : undefined,
+        };
+    },
+
+    toJSON(message: SuccessResponse): unknown {
+        const obj: any = {};
+        if (message.success !== undefined) {
+            obj.success = message.success;
+        }
+        if (message.error !== undefined) {
+            obj.error = ErrorObject.toJSON(message.error);
+        }
+        return obj;
+    },
+
+    create(base?: DeepPartial<SuccessResponse>): SuccessResponse {
+        return SuccessResponse.fromPartial(base ?? {});
+    },
+    fromPartial(object: DeepPartial<SuccessResponse>): SuccessResponse {
+        const message = createBaseSuccessResponse();
+        message.success = object.success ?? undefined;
+        message.error = (object.error !== undefined && object.error !== null)
+            ? ErrorObject.fromPartial(object.error)
+            : undefined;
+        return message;
+    },
 };
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
 export type DeepPartial<T> = T extends Builtin ? T
-  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
-  : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-  : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
-  : Partial<T>;
+    : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
+        : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
+            : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
+                : Partial<T>;
 
 function isSet(value: any): boolean {
-  return value !== null && value !== undefined;
+    return value !== null && value !== undefined;
 }
 
 export interface MessageFns<T> {
-  encode(message: T, writer?: BinaryWriter): BinaryWriter;
-  decode(input: BinaryReader | Uint8Array, length?: number): T;
-  fromJSON(object: any): T;
-  toJSON(message: T): unknown;
-  create(base?: DeepPartial<T>): T;
-  fromPartial(object: DeepPartial<T>): T;
+    encode(message: T, writer?: BinaryWriter): BinaryWriter;
+
+    decode(input: BinaryReader | Uint8Array, length?: number): T;
+
+    fromJSON(object: any): T;
+
+    toJSON(message: T): unknown;
+
+    create(base?: DeepPartial<T>): T;
+
+    fromPartial(object: DeepPartial<T>): T;
 }

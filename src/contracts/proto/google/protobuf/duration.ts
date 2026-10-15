@@ -5,7 +5,7 @@
 // source: google/protobuf/duration.proto
 
 /* eslint-disable */
-import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
+import {BinaryReader, BinaryWriter} from "@bufbuild/protobuf/wire";
 
 export const protobufPackage = "google.protobuf";
 
@@ -70,127 +70,132 @@ export const protobufPackage = "google.protobuf";
  * microsecond should be expressed in JSON format as "3.000001s".
  */
 export interface Duration {
-  /**
-   * Signed seconds of the span of time. Must be from -315,576,000,000
-   * to +315,576,000,000 inclusive. Note: these bounds are computed from:
-   * 60 sec/min * 60 min/hr * 24 hr/day * 365.25 days/year * 10000 years
-   */
-  seconds: number;
-  /**
-   * Signed fractions of a second at nanosecond resolution of the span
-   * of time. Durations less than one second are represented with a 0
-   * `seconds` field and a positive or negative `nanos` field. For durations
-   * of one second or more, a non-zero value for the `nanos` field must be
-   * of the same sign as the `seconds` field. Must be from -999,999,999
-   * to +999,999,999 inclusive.
-   */
-  nanos: number;
+    /**
+     * Signed seconds of the span of time. Must be from -315,576,000,000
+     * to +315,576,000,000 inclusive. Note: these bounds are computed from:
+     * 60 sec/min * 60 min/hr * 24 hr/day * 365.25 days/year * 10000 years
+     */
+    seconds: number;
+    /**
+     * Signed fractions of a second at nanosecond resolution of the span
+     * of time. Durations less than one second are represented with a 0
+     * `seconds` field and a positive or negative `nanos` field. For durations
+     * of one second or more, a non-zero value for the `nanos` field must be
+     * of the same sign as the `seconds` field. Must be from -999,999,999
+     * to +999,999,999 inclusive.
+     */
+    nanos: number;
 }
 
 function createBaseDuration(): Duration {
-  return { seconds: 0, nanos: 0 };
+    return {seconds: 0, nanos: 0};
 }
 
 export const Duration: MessageFns<Duration> = {
-  encode(message: Duration, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.seconds !== 0) {
-      writer.uint32(8).int64(message.seconds);
-    }
-    if (message.nanos !== 0) {
-      writer.uint32(16).int32(message.nanos);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): Duration {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseDuration();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 8) {
-            break;
-          }
-
-          message.seconds = longToNumber(reader.int64());
-          continue;
+    encode(message: Duration, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+        if (message.seconds !== 0) {
+            writer.uint32(8).int64(message.seconds);
         }
-        case 2: {
-          if (tag !== 16) {
-            break;
-          }
-
-          message.nanos = reader.int32();
-          continue;
+        if (message.nanos !== 0) {
+            writer.uint32(16).int32(message.nanos);
         }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
+        return writer;
+    },
 
-  fromJSON(object: any): Duration {
-    return {
-      seconds: isSet(object.seconds) ? globalThis.Number(object.seconds) : 0,
-      nanos: isSet(object.nanos) ? globalThis.Number(object.nanos) : 0,
-    };
-  },
+    decode(input: BinaryReader | Uint8Array, length?: number): Duration {
+        const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+        const end = length === undefined ? reader.len : reader.pos + length;
+        const message = createBaseDuration();
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1: {
+                    if (tag !== 8) {
+                        break;
+                    }
 
-  toJSON(message: Duration): unknown {
-    const obj: any = {};
-    if (message.seconds !== 0) {
-      obj.seconds = Math.round(message.seconds);
-    }
-    if (message.nanos !== 0) {
-      obj.nanos = Math.round(message.nanos);
-    }
-    return obj;
-  },
+                    message.seconds = longToNumber(reader.int64());
+                    continue;
+                }
+                case 2: {
+                    if (tag !== 16) {
+                        break;
+                    }
 
-  create(base?: DeepPartial<Duration>): Duration {
-    return Duration.fromPartial(base ?? {});
-  },
-  fromPartial(object: DeepPartial<Duration>): Duration {
-    const message = createBaseDuration();
-    message.seconds = object.seconds ?? 0;
-    message.nanos = object.nanos ?? 0;
-    return message;
-  },
+                    message.nanos = reader.int32();
+                    continue;
+                }
+            }
+            if ((tag & 7) === 4 || tag === 0) {
+                break;
+            }
+            reader.skip(tag & 7);
+        }
+        return message;
+    },
+
+    fromJSON(object: any): Duration {
+        return {
+            seconds: isSet(object.seconds) ? globalThis.Number(object.seconds) : 0,
+            nanos: isSet(object.nanos) ? globalThis.Number(object.nanos) : 0,
+        };
+    },
+
+    toJSON(message: Duration): unknown {
+        const obj: any = {};
+        if (message.seconds !== 0) {
+            obj.seconds = Math.round(message.seconds);
+        }
+        if (message.nanos !== 0) {
+            obj.nanos = Math.round(message.nanos);
+        }
+        return obj;
+    },
+
+    create(base?: DeepPartial<Duration>): Duration {
+        return Duration.fromPartial(base ?? {});
+    },
+    fromPartial(object: DeepPartial<Duration>): Duration {
+        const message = createBaseDuration();
+        message.seconds = object.seconds ?? 0;
+        message.nanos = object.nanos ?? 0;
+        return message;
+    },
 };
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
 export type DeepPartial<T> = T extends Builtin ? T
-  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
-  : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-  : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
-  : Partial<T>;
+    : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
+        : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
+            : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
+                : Partial<T>;
 
 function longToNumber(int64: { toString(): string }): number {
-  const num = globalThis.Number(int64.toString());
-  if (num > globalThis.Number.MAX_SAFE_INTEGER) {
-    throw new globalThis.Error("Value is larger than Number.MAX_SAFE_INTEGER");
-  }
-  if (num < globalThis.Number.MIN_SAFE_INTEGER) {
-    throw new globalThis.Error("Value is smaller than Number.MIN_SAFE_INTEGER");
-  }
-  return num;
+    const num = globalThis.Number(int64.toString());
+    if (num > globalThis.Number.MAX_SAFE_INTEGER) {
+        throw new globalThis.Error("Value is larger than Number.MAX_SAFE_INTEGER");
+    }
+    if (num < globalThis.Number.MIN_SAFE_INTEGER) {
+        throw new globalThis.Error("Value is smaller than Number.MIN_SAFE_INTEGER");
+    }
+    return num;
 }
 
 function isSet(value: any): boolean {
-  return value !== null && value !== undefined;
+    return value !== null && value !== undefined;
 }
 
 export interface MessageFns<T> {
-  encode(message: T, writer?: BinaryWriter): BinaryWriter;
-  decode(input: BinaryReader | Uint8Array, length?: number): T;
-  fromJSON(object: any): T;
-  toJSON(message: T): unknown;
-  create(base?: DeepPartial<T>): T;
-  fromPartial(object: DeepPartial<T>): T;
+    encode(message: T, writer?: BinaryWriter): BinaryWriter;
+
+    decode(input: BinaryReader | Uint8Array, length?: number): T;
+
+    fromJSON(object: any): T;
+
+    toJSON(message: T): unknown;
+
+    create(base?: DeepPartial<T>): T;
+
+    fromPartial(object: DeepPartial<T>): T;
 }

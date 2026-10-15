@@ -4,7 +4,6 @@ import GitService from "../../../infrastructure/git/service";
 export class PullUseCase {
 
     constructor(
-
         // private readonly issueRepository: IssueRepository,
         private readonly githubService: GithubService,
         private readonly gitService: GitService,
@@ -13,10 +12,7 @@ export class PullUseCase {
 
 
     async execute(): Promise<Object> {
-        return {
-            status: 'PullUseCase',
-        };
-
+        await this.gitService.pull();
     }
 }
 

@@ -1,10 +1,9 @@
 import logger from "@shared/logger";
-import express, {Express, Router, RequestHandler} from 'express';
+import express, {Express, RequestHandler, Router} from 'express';
 import morgan from 'morgan';
 import cors from 'cors'
 // import cookieParser from "cookie-parser";
 import {Server} from "http";
-import GatewayRouter from "./routes/health.routes";
 
 export class HttpServerService {
     private readonly app: Express;

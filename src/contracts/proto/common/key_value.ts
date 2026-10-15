@@ -5,108 +5,113 @@
 // source: common/key_value.proto
 
 /* eslint-disable */
-import { BinaryReader, BinaryWriter } from "@bufbuild/protobuf/wire";
+import {BinaryReader, BinaryWriter} from "@bufbuild/protobuf/wire";
 
 export const protobufPackage = "common.key_value";
 
 export interface KeyValue {
-  key: string;
-  value: string;
+    key: string;
+    value: string;
 }
 
 function createBaseKeyValue(): KeyValue {
-  return { key: "", value: "" };
+    return {key: "", value: ""};
 }
 
 export const KeyValue: MessageFns<KeyValue> = {
-  encode(message: KeyValue, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
-    if (message.key !== "") {
-      writer.uint32(10).string(message.key);
-    }
-    if (message.value !== "") {
-      writer.uint32(18).string(message.value);
-    }
-    return writer;
-  },
-
-  decode(input: BinaryReader | Uint8Array, length?: number): KeyValue {
-    const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
-    const end = length === undefined ? reader.len : reader.pos + length;
-    const message = createBaseKeyValue();
-    while (reader.pos < end) {
-      const tag = reader.uint32();
-      switch (tag >>> 3) {
-        case 1: {
-          if (tag !== 10) {
-            break;
-          }
-
-          message.key = reader.string();
-          continue;
+    encode(message: KeyValue, writer: BinaryWriter = new BinaryWriter()): BinaryWriter {
+        if (message.key !== "") {
+            writer.uint32(10).string(message.key);
         }
-        case 2: {
-          if (tag !== 18) {
-            break;
-          }
-
-          message.value = reader.string();
-          continue;
+        if (message.value !== "") {
+            writer.uint32(18).string(message.value);
         }
-      }
-      if ((tag & 7) === 4 || tag === 0) {
-        break;
-      }
-      reader.skip(tag & 7);
-    }
-    return message;
-  },
+        return writer;
+    },
 
-  fromJSON(object: any): KeyValue {
-    return {
-      key: isSet(object.key) ? globalThis.String(object.key) : "",
-      value: isSet(object.value) ? globalThis.String(object.value) : "",
-    };
-  },
+    decode(input: BinaryReader | Uint8Array, length?: number): KeyValue {
+        const reader = input instanceof BinaryReader ? input : new BinaryReader(input);
+        const end = length === undefined ? reader.len : reader.pos + length;
+        const message = createBaseKeyValue();
+        while (reader.pos < end) {
+            const tag = reader.uint32();
+            switch (tag >>> 3) {
+                case 1: {
+                    if (tag !== 10) {
+                        break;
+                    }
 
-  toJSON(message: KeyValue): unknown {
-    const obj: any = {};
-    if (message.key !== "") {
-      obj.key = message.key;
-    }
-    if (message.value !== "") {
-      obj.value = message.value;
-    }
-    return obj;
-  },
+                    message.key = reader.string();
+                    continue;
+                }
+                case 2: {
+                    if (tag !== 18) {
+                        break;
+                    }
 
-  create(base?: DeepPartial<KeyValue>): KeyValue {
-    return KeyValue.fromPartial(base ?? {});
-  },
-  fromPartial(object: DeepPartial<KeyValue>): KeyValue {
-    const message = createBaseKeyValue();
-    message.key = object.key ?? "";
-    message.value = object.value ?? "";
-    return message;
-  },
+                    message.value = reader.string();
+                    continue;
+                }
+            }
+            if ((tag & 7) === 4 || tag === 0) {
+                break;
+            }
+            reader.skip(tag & 7);
+        }
+        return message;
+    },
+
+    fromJSON(object: any): KeyValue {
+        return {
+            key: isSet(object.key) ? globalThis.String(object.key) : "",
+            value: isSet(object.value) ? globalThis.String(object.value) : "",
+        };
+    },
+
+    toJSON(message: KeyValue): unknown {
+        const obj: any = {};
+        if (message.key !== "") {
+            obj.key = message.key;
+        }
+        if (message.value !== "") {
+            obj.value = message.value;
+        }
+        return obj;
+    },
+
+    create(base?: DeepPartial<KeyValue>): KeyValue {
+        return KeyValue.fromPartial(base ?? {});
+    },
+    fromPartial(object: DeepPartial<KeyValue>): KeyValue {
+        const message = createBaseKeyValue();
+        message.key = object.key ?? "";
+        message.value = object.value ?? "";
+        return message;
+    },
 };
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
 
 export type DeepPartial<T> = T extends Builtin ? T
-  : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
-  : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
-  : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
-  : Partial<T>;
+    : T extends globalThis.Array<infer U> ? globalThis.Array<DeepPartial<U>>
+        : T extends ReadonlyArray<infer U> ? ReadonlyArray<DeepPartial<U>>
+            : T extends {} ? { [K in keyof T]?: DeepPartial<T[K]> }
+                : Partial<T>;
 
 function isSet(value: any): boolean {
-  return value !== null && value !== undefined;
+    return value !== null && value !== undefined;
 }
 
 export interface MessageFns<T> {
-  encode(message: T, writer?: BinaryWriter): BinaryWriter;
-  decode(input: BinaryReader | Uint8Array, length?: number): T;
-  fromJSON(object: any): T;
-  toJSON(message: T): unknown;
-  create(base?: DeepPartial<T>): T;
-  fromPartial(object: DeepPartial<T>): T;
+    encode(message: T, writer?: BinaryWriter): BinaryWriter;
+
+    decode(input: BinaryReader | Uint8Array, length?: number): T;
+
+    fromJSON(object: any): T;
+
+    toJSON(message: T): unknown;
+
+    create(base?: DeepPartial<T>): T;
+
+    fromPartial(object: DeepPartial<T>): T;
 }

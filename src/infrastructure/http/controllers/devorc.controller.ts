@@ -10,7 +10,7 @@ import IssueToReviewUseCase from "../../../application/use-cases/devorc/issue/is
 export class DevorcController {
 
     issueCreate = wrapper(async (req, res) => {
-        const { title } = req.body ?? {};
+        const {title} = req.body ?? {};
         return await this.issueCreateUseCase.execute(title);
     });
 
@@ -18,7 +18,7 @@ export class DevorcController {
         return await this.issueFlushUseCase.execute();
     });
     issueSelect = wrapper(async () => {
-        return await this.issueSelectUseCase.execute();
+        return await this.issueSelectUseCase.execute('1');
     });
     park = wrapper(async () => {
         return await this.parkUseCase.execute();

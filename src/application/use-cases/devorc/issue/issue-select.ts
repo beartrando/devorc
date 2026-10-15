@@ -4,7 +4,6 @@ import GitService from "../../../../infrastructure/git/service";
 export class IssueSelectUseCase {
 
     constructor(
-
         // private readonly issueRepository: IssueRepository,
         private readonly githubService: GithubService,
         private readonly gitService: GitService,
@@ -12,11 +11,10 @@ export class IssueSelectUseCase {
     }
 
 
-    async execute(): Promise<Object> {
-        return {
-            status: 'IssueSelectUseCase',
-        };
-
+    async execute(issueId: string): Promise<void> {
+        const title = await this.githubService.getIssueTitle(issueId);
+        const branchName = this.gitService.createBranchName(issueId, title);
+        await this.gitService.checkoutBranches(branchName);
     }
 }
 

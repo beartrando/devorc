@@ -4,7 +4,6 @@ import GitService from "../../../infrastructure/git/service";
 export class RefreshStatusUseCase {
 
     constructor(
-
         // private readonly issueRepository: IssueRepository,
         private readonly githubService: GithubService,
         private readonly gitService: GitService,
@@ -13,7 +12,7 @@ export class RefreshStatusUseCase {
 
 
     async execute(): Promise<void> {
-        // await this.gitService.refreshRepositoryStatuses();
+        await this.gitService.refreshRepositoryStatuses();
     }
 }
 

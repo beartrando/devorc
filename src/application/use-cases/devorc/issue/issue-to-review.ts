@@ -4,7 +4,6 @@ import GitService from "../../../../infrastructure/git/service";
 export class IssueToReviewUseCase {
 
     constructor(
-
         // private readonly issueRepository: IssueRepository,
         private readonly githubService: GithubService,
         private readonly gitService: GitService,
