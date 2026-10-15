@@ -48,7 +48,7 @@ export class Cli {
             action: () => this.issueToReview(),
         },
         {
-            label: 'Checkout,
+            label: 'Checkout',
             action: () => this.checkout(),
         },
         {
