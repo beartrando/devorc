@@ -71,9 +71,7 @@ export class GitService {
     }
 
     getRepositories(): Map<string, string> {
-        const repositories = new Map<string, string>([
-            ['base', this.projectDir],
-        ]);
+        const repositories = new Map<string, string>([]);
 
         for (const [name, path] of this.serviceRepositories) {
             repositories.set(name, path);
@@ -90,6 +88,8 @@ export class GitService {
                 repositories.set(name, path);
             }
         }
+
+        repositories.set('base', this.projectDir);
 
         return repositories;
     }
@@ -254,11 +254,11 @@ export class GitService {
         }
     }
 
-    getListOfAffectedBranches(): Set<BranchName> {
+    getListOfAffectedRepos(): Set<string> {
         return new Set(
-            [...this.repositoryStatuses.values()]
-                .filter(status => status.affected)
-                .map(status => status.branch),
+            [...this.repositoryStatuses]
+                .filter(([, status]) => status.affected)
+                .map(([repo]) => repo),
         );
     }
 
@@ -339,18 +339,6 @@ export class GitService {
         }, this.getRepositories());
     }
 
-    async commitAndPush(
-        message?: string,
-    ): Promise<void> {
-        const branchName = await this.getBaseBranch();
-
-        message = message || branchName.value;
-
-        await this.checkoutBranches(branchName);
-        await this.commit(message);
-        // await this.pull();
-        // await this.push();
-    }
 
     // async checkoutAndPull(): Promise<void> {
     //     await this.checkoutBranches();
