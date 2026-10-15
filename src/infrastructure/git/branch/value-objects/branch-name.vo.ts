@@ -11,7 +11,7 @@ export class BranchName {
     static create(name: string): BranchName {
         if (
             !ALLOWED_EXCEPTIONS.includes(name) &&
-            !/^\d+-[a-z0-9]+(?:-[a-z0-9]+)*$/.test(name)
+            !/^\d+-[a-z0-9]+(?:[-_][a-z0-9]+)*$/.test(name)
         ) {
             throw new Error(`Invalid branch name: ${name}`);
         }
