@@ -22,10 +22,12 @@ export class IssueToReviewUseCase {
 
         const repos = this.gitService.getListOfAffectedRepos();
 
-        const result = await this.githubService.createOrUpdatePullRequests(repos, branchName);
-        console.log(result);
+        // const result = await this.githubService.createOrUpdatePullRequests(repos, branchName);
+        // console.log(result);
 
-        return result;
+        return [];
+
+        // return result;
     }
 }
 
