@@ -33,6 +33,7 @@ export class GithubService {
         const pullRequests: string[] = [];
 
         for (const repo of repos) {
+            console.log(repo, ': create PR.')
             const existingPr = await this.execute([
                 'pr', 'list',
                 '--head', branch.value,

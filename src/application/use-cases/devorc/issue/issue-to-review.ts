@@ -24,11 +24,8 @@ export class IssueToReviewUseCase {
         const paths = this.gitService.getListOfAffectedRepos();
         logger.log(paths);
         const repos = await this.gitService.getReposByPaths(paths);
-        logger.log('done?');
 
         const result = await this.githubService.createOrUpdatePullRequests(repos, branchName);
-
-        console.log(result);
 
         return result;
 
