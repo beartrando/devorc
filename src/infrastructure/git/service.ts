@@ -269,7 +269,7 @@ export class GitService {
         );
     }
 
-    //
+
     async getProjectRepo(): Promise<string> {
         const url = await this.git(this.basePath, ['remote', 'get-url', 'origin']);
 
@@ -278,6 +278,25 @@ export class GitService {
             .replace(/^.*github\.com[:/]/, '');
     }
 
+    async getReposByPaths(paths: Set<string>): Promise<Set<string>> {
+        const repos = new Set<string>();
+
+        for (const path of paths) {
+            const remote = (await this.git(path, [
+                'remote',
+                'get-url',
+                'origin',
+            ])).trim();
+
+            const match = remote.match(/github\.com[:/]([^/]+\/[^/.]+?)(?:\.git)?$/);
+
+            if (match) {
+                repos.add(match[1]);
+            }
+        }
+
+        return repos;
+    }
 
     async executeForAll(
         operation: (name: string, path: string) => Promise<unknown>,

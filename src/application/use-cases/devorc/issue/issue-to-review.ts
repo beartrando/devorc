@@ -21,10 +21,11 @@ export class IssueToReviewUseCase {
         await this.gitService.pull();
         await this.gitService.push();
 
-        const repos = this.gitService.getListOfAffectedRepos();
+        const paths = this.gitService.getListOfAffectedRepos();
+        const repos = await this.gitService.getReposByPaths(paths);
 
         const result = await this.githubService.createOrUpdatePullRequests(repos, branchName);
-        
+
         console.log(result);
 
         return result;
