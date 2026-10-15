@@ -89,7 +89,7 @@ export class GitService {
             }
         }
 
-        repositories.set('base', this.projectDir);
+        repositories.set('.', this.projectDir);
 
         if (affectedOnly) {
             return new Map(
