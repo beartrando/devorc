@@ -61,7 +61,7 @@ export class GithubService {
 
         return pullRequests;
     }
-    
+
     async createIssue(title: string): Promise<string> {
         const result = await this.execute([
             'issue', 'create',

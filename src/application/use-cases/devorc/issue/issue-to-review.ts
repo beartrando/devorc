@@ -22,8 +22,10 @@ export class IssueToReviewUseCase {
 
         const repos = this.gitService.getListOfAffectedRepos();
 
-        return await this.githubService.createOrUpdatePullRequests(repos, branchName);
+        const result = await this.githubService.createOrUpdatePullRequests(repos, branchName);
+        console.log(result);
 
+        return result;
     }
 }
 
