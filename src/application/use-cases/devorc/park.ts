@@ -11,10 +11,8 @@ export class ParkUseCase {
     }
 
 
-    async execute(): Promise<Object> {
-        return {
-            status: 'ParkUseCase',
-        };
+    async execute(): Promise<void> {
+        await this.gitService.checkoutBranches();
 
     }
 }

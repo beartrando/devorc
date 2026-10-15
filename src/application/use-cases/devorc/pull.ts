@@ -11,7 +11,7 @@ export class PullUseCase {
     }
 
 
-    async execute(): Promise<Object> {
+    async execute(): Promise<void> {
         await this.gitService.pull();
     }
 }

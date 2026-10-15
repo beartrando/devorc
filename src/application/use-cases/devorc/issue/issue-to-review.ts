@@ -12,7 +12,7 @@ export class IssueToReviewUseCase {
 
 
     async execute(): Promise<void> {
-        // await this.gitService.commitAndPush();
+        await this.gitService.commitAndPush();
         // await this.githubService.createOrUpdatePullRequests();
 
     }

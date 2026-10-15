@@ -290,12 +290,13 @@ export class GitService {
         await this.executeForAll(async (name, path) => {
             await this.git(path, ['add', '-A']);
 
-            const status = await this.git(path, [
-                'status',
-                '--porcelain',
+            const staged = await this.git(path, [
+                'diff',
+                '--cached',
+                '--name-only',
             ]);
 
-            if (status) {
+            if (staged.trim()) {
                 await this.git(path, ['commit', '-m', message]);
             } else {
                 console.log(`${name}: nothing to commit`);
@@ -306,6 +307,18 @@ export class GitService {
     async pull(): Promise<void> {
         await this.executeForAll(async (name, path) => {
             console.log(`${name}: pulling`);
+
+            const branchName = await this.currentBranch(path);
+            const workingTree = await this.git(path, [
+                'status',
+                '--porcelain',
+            ]);
+
+            if (workingTree) {
+                console.log(`${name}: skipped (working tree is dirty)`);
+                return;
+            }
+
             const remoteBranch = await this.git(path, [
                 'ls-remote',
                 '--heads',
@@ -335,8 +348,8 @@ export class GitService {
 
         await this.checkoutBranches(branchName);
         await this.commit(message);
-        await this.pull();
-        await this.push();
+        // await this.pull();
+        // await this.push();
     }
 
     // async checkoutAndPull(): Promise<void> {
