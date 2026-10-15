@@ -340,12 +340,12 @@ export class GitService {
     }
 
     async push(): Promise<void> {
-        await this.executeForAll(async (name, path) => {
-            console.log(`${name}: pushing`);
-            const branchName = await this.currentBranch();
-            console.log(path, ['push', 'origin', branchName.value]);
-            await this.git(path, ['push', 'origin', branchName.value]);
-        }, this.getRepositories(true));
+        // await this.executeForAll(async (name, path) => {
+        //     console.log(`${name}: pushing`);
+        //     const branchName = await this.currentBranch();
+        //     console.log(path, ['push', 'origin', branchName.value]);
+        //     await this.git(path, ['push', 'origin', branchName.value]);
+        // }, this.getRepositories(true));
     }
 
     private async git(path: string, args: string[]): Promise<string> {
