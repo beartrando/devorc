@@ -139,19 +139,15 @@ export class GitService {
         const repositories = this.getRepositories();
 
         for (const [name, path] of repositories) {
-            console.log('-------------------------------');
             let affected = true;
             try {
                 const branch = BranchName.create(await this.git(path, ['branch', '--show-current']));
 
                 affected = !branch.isDefault();
 
-                console.log(1,affected);
                 const workingTree = await this.git(path, ['status', '--porcelain']);
 
                 affected = affected || Boolean(workingTree);
-                console.log(11,Boolean(workingTree));
-                console.log(11,affected);
 
                 let origin: RepositoryStatus['origin'] = 'unknown';
 
@@ -177,9 +173,7 @@ export class GitService {
                     } else {
                         origin = 'up-to-date';
                     }
-                    console.log(2,affected);
                 } catch {
-                    console.log(3,affected);
                     origin = 'unknown';
                 }
 

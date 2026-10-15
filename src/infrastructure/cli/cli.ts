@@ -119,7 +119,7 @@ export class Cli {
         const items = this.menu.map(({label}) => label);
 
         const render = async () => {
-            // console.clear();
+            console.clear();
             await this.showRepositoryStatuses();
 
             console.log('\n=== DevOrc ===\n');
