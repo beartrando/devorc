@@ -13,7 +13,7 @@ export class IssueToReviewUseCase {
 
     async execute(): Promise< string[]> {
 
-        const branchName = await this.gitService.getBaseBranch();
+        const branchName = await this.gitService.getBranch();
 
         await this.gitService.checkoutBranches(branchName);
         await this.gitService.commit(branchName.value);

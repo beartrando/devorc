@@ -137,8 +137,9 @@ export class GitService {
         }
     }
 
-    async getBaseBranch(): Promise<BranchName> {
-        return BranchName.create(await this.git(this.basePath, ['branch', '--show-current']));
+    async getBranch(path?: string): Promise<BranchName> {
+        path ??= this.basePath;
+        return BranchName.create(await this.git(path, ['branch', '--show-current']));
     }
 
     async calculateRepositoryStatuses(): Promise<Map<string, RepositoryStatus>> {
@@ -236,7 +237,7 @@ export class GitService {
     }
 
     async checkoutBranches(branchName?: BranchName): Promise<void> {
-        branchName ??= await this.getBaseBranch();
+        branchName ??= await this.getBranch();
         console.log(branchName);
         const repositories = this.getRepositories();
         const errors: string[] = [];
@@ -291,7 +292,7 @@ export class GitService {
     async commit(
         message?: string,
     ): Promise<void> {
-        const branchName = await this.getBaseBranch();
+        const branchName = await this.getBranch();
         message = message || branchName.value;
 
         await this.executeForAll(async (name, path) => {
@@ -342,7 +343,7 @@ export class GitService {
     async push(): Promise<void> {
         await this.executeForAll(async (name, path) => {
             console.log(`${name}: pushing`);
-            const branchName = await this.currentBranch(path);
+            const branchName = await this.getBranch(path);
             console.log(path, ['push', 'origin', branchName.value]);
             // await this.git(path, ['push', 'origin', branchName.value]);
         }, this.getRepositories(true));
