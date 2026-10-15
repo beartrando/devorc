@@ -335,7 +335,8 @@ export class GitService {
     async push(): Promise<void> {
         await this.executeForAll(async (name, path) => {
             console.log(`${name}: pushing`);
-            await this.git(path, ['push']);
+            const branchName = await this.currentBranch();
+            await this.git(path, ['push', 'origin', branchName.value]);
         }, this.getRepositories());
     }
 
