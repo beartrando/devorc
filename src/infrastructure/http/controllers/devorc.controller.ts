@@ -3,8 +3,8 @@ import RefreshStatusUseCase from "../../../application/use-cases/devorc/refresh-
 import IssueCreateUseCase from "../../../application/use-cases/devorc/issue/issue-create";
 import IssueFlushUseCase from "../../../application/use-cases/devorc/issue/issue-flush";
 import IssueSelectUseCase from "../../../application/use-cases/devorc/issue/issue-select";
-import ParkUseCase from "../../../application/use-cases/devorc/park";
-import PullUseCase from "../../../application/use-cases/devorc/pull";
+import ParkUseCase from "../../../application/use-cases/devorc/checkout";
+import CheckoutUseCase from "../../../application/use-cases/devorc/pull";
 import IssueToReviewUseCase from "../../../application/use-cases/devorc/issue/issue-to-review";
 
 export class DevorcController {
@@ -38,7 +38,7 @@ export class DevorcController {
         private readonly issueFlushUseCase: IssueFlushUseCase,
         private readonly issueSelectUseCase: IssueSelectUseCase,
         private readonly parkUseCase: ParkUseCase,
-        private readonly pullUseCase: PullUseCase,
+        private readonly pullUseCase: CheckoutUseCase,
         private readonly issueToReviewUseCase: IssueToReviewUseCase,
         private readonly refreshStatusUseCase: RefreshStatusUseCase,
     ) {

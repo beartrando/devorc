@@ -1,7 +1,7 @@
 import GithubService from "../../../infrastructure/github/service";
 import GitService from "../../../infrastructure/git/service";
 
-export class PullUseCase {
+export class CheckoutUseCase {
 
     constructor(
         // private readonly issueRepository: IssueRepository,
@@ -17,4 +17,4 @@ export class PullUseCase {
 }
 
 
-export default PullUseCase;
+export default CheckoutUseCase;

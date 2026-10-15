@@ -4,7 +4,7 @@ import {stdin as input, stdout as output} from 'node:process';
 
 import IssueFlushUseCase from '../../application/use-cases/devorc/issue/issue-flush';
 import IssueSelectUseCase from '../../application/use-cases/devorc/issue/issue-select';
-import ParkUseCase from '../../application/use-cases/devorc/park';
+import CheckoutUseCase from '../../application/use-cases/devorc/checkout';
 import PullUseCase from '../../application/use-cases/devorc/pull';
 import IssueCreateUseCase from '../../application/use-cases/devorc/issue/issue-create';
 import GitService from '../git/service';
@@ -48,8 +48,8 @@ export class Cli {
             action: () => this.issueToReview(),
         },
         {
-            label: 'Park',
-            action: () => this.park(),
+            label: 'Checkout,
+            action: () => this.checkout(),
         },
         {
             label: 'Extra repositories: OFF/ON',
@@ -71,7 +71,7 @@ export class Cli {
         private readonly issueCreateUseCase: IssueCreateUseCase,
         private readonly issueFlushUseCase: IssueFlushUseCase,
         private readonly issueSelectUseCase: IssueSelectUseCase,
-        private readonly parkUseCase: ParkUseCase,
+        private readonly checkoutUseCase: CheckoutUseCase,
         private readonly pullUseCase: PullUseCase,
         private readonly issueToReviewUseCase: IssueToReviewUseCase,
         private readonly calculateStatusUseCase: CalculateStatusUseCase,
@@ -249,9 +249,9 @@ export class Cli {
         await this.keypress();
     }
 
-    private async park(): Promise<void> {
+    private async checkout(): Promise<void> {
         console.log('wait...');
-        await this.parkUseCase.execute();
+        await this.checkoutUseCase.execute();
         await this.keypress();
     }
 
