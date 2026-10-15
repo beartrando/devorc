@@ -28,8 +28,6 @@ export class IssueToReviewUseCase {
 
         const result = await this.githubService.createOrUpdatePullRequests(repos, branchName);
 
-        console.log(result);
-
         return result;
 
         // return result;

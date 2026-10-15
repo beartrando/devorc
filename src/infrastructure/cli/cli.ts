@@ -242,7 +242,10 @@ export class Cli {
 
     private async issueToReview(): Promise<void> {
         console.log('wait...');
-        await this.issueToReviewUseCase.execute();
+        const pullRequests = await this.issueToReviewUseCase.execute();
+        for (const item of pullRequests) {
+            console.log(item);
+        }
         await this.keypress();
     }
 
