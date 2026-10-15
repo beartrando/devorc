@@ -70,10 +70,8 @@ export class GitService {
 
     }
 
-    getRepositories(): Map<string, string> {
-        const repositories = new Map<string, string>([
-            ['base', this.projectDir],
-        ]);
+    getRepositories(affectedOnly = false): Map<string, string> {
+        const repositories = new Map<string, string>();
 
         for (const [name, path] of this.serviceRepositories) {
             repositories.set(name, path);
@@ -91,9 +89,18 @@ export class GitService {
             }
         }
 
+        repositories.set('.', this.projectDir);
+
+        if (affectedOnly) {
+            return new Map(
+                [...repositories].filter(([name]) =>
+                    this.repositoryStatuses.get(name)?.affected,
+                ),
+            );
+        }
+
         return repositories;
     }
-
     async setBranch(name: BranchName): Promise<void> {
         await this.checkoutBranch(this.basePath, name);
     }
@@ -130,8 +137,9 @@ export class GitService {
         }
     }
 
-    async getBaseBranch(): Promise<BranchName> {
-        return BranchName.create(await this.git(this.basePath, ['branch', '--show-current']));
+    async getBranch(path?: string): Promise<BranchName> {
+        path ??= this.basePath;
+        return BranchName.create(await this.git(path, ['branch', '--show-current']));
     }
 
     async calculateRepositoryStatuses(): Promise<Map<string, RepositoryStatus>> {
@@ -229,13 +237,12 @@ export class GitService {
     }
 
     async checkoutBranches(branchName?: BranchName): Promise<void> {
-        branchName ??= await this.getBaseBranch();
-        console.log(branchName);
+        branchName ??= await this.getBranch();
         const repositories = this.getRepositories();
         const errors: string[] = [];
 
         for (const [name, path] of repositories) {
-            console.log(name);
+            console.log(name, ': checkout to', branchName.value);
             try {
                 await this.checkoutBranch(path, branchName);
             } catch (error) {
@@ -254,15 +261,15 @@ export class GitService {
         }
     }
 
-    getListOfAffectedBranches(): Set<BranchName> {
+    getListOfAffectedRepos(): Set<string> {
         return new Set(
-            [...this.repositoryStatuses.values()]
-                .filter(status => status.affected)
-                .map(status => status.branch),
+            [...this.repositoryStatuses]
+                .filter(([, status]) => status.affected)
+                .map(([repo]) => repo),
         );
     }
 
-    //
+
     async getProjectRepo(): Promise<string> {
         const url = await this.git(this.basePath, ['remote', 'get-url', 'origin']);
 
@@ -271,6 +278,25 @@ export class GitService {
             .replace(/^.*github\.com[:/]/, '');
     }
 
+    async getReposByPaths(paths: Set<string>): Promise<Set<string>> {
+        const repos = new Set<string>();
+
+        for (const path of paths) {
+            const remote = (await this.git(path, [
+                'remote',
+                'get-url',
+                'origin',
+            ])).trim();
+
+            const match = remote.match(/github\.com[:/]([^/]+\/[^/.]+?)(?:\.git)?$/);
+
+            if (match) {
+                repos.add(match[1]);
+            }
+        }
+
+        return repos;
+    }
 
     async executeForAll(
         operation: (name: string, path: string) => Promise<unknown>,
@@ -284,18 +310,19 @@ export class GitService {
     async commit(
         message?: string,
     ): Promise<void> {
-        const branchName = await this.getBaseBranch();
+        const branchName = await this.getBranch();
         message = message || branchName.value;
 
         await this.executeForAll(async (name, path) => {
             await this.git(path, ['add', '-A']);
 
-            const status = await this.git(path, [
-                'status',
-                '--porcelain',
+            const staged = await this.git(path, [
+                'diff',
+                '--cached',
+                '--name-only',
             ]);
 
-            if (status) {
+            if (staged.trim()) {
                 await this.git(path, ['commit', '-m', message]);
             } else {
                 console.log(`${name}: nothing to commit`);
@@ -306,6 +333,18 @@ export class GitService {
     async pull(): Promise<void> {
         await this.executeForAll(async (name, path) => {
             console.log(`${name}: pulling`);
+
+            const branchName = await this.currentBranch(path);
+            const workingTree = await this.git(path, [
+                'status',
+                '--porcelain',
+            ]);
+
+            if (workingTree) {
+                console.log(`${name}: skipped (working tree is dirty)`);
+                return;
+            }
+
             const remoteBranch = await this.git(path, [
                 'ls-remote',
                 '--heads',
@@ -316,47 +355,16 @@ export class GitService {
             if (remoteBranch) {
                 await this.git(path, ['pull', 'origin', branchName.value]);
             }
-        }, this.getRepositories());
+        }, this.getRepositories(true));
     }
 
     async push(): Promise<void> {
         await this.executeForAll(async (name, path) => {
             console.log(`${name}: pushing`);
-            await this.git(path, ['push']);
-        }, this.getRepositories());
+            const branchName = await this.getBranch(path);
+            await this.git(path, ['push', 'origin', branchName.value]);
+        }, this.getRepositories(true));
     }
-
-    async commitAndPush(
-        message?: string,
-    ): Promise<void> {
-        const branchName = await this.getBaseBranch();
-
-        message = message || branchName.value;
-
-        await this.checkoutBranches(branchName);
-        await this.commit(message);
-        await this.pull();
-        await this.push();
-    }
-
-    // async checkoutAndPull(): Promise<void> {
-    //     await this.checkoutBranches();
-    //     await this.pull();
-    // }
-    //
-    // async park(
-    //     message?: string,
-    // ): Promise<void> {
-    //     const branchName = await this.getBaseBranch();
-    //
-    //     message = message || branchName.value;
-    //
-    //     await this.commitAndPush(message);
-    //
-    //     this.setBranch(BranchName.create(DEFAULT_BRANCH_NAME));
-    //     await this.checkoutBranches();
-    //     await this.pull();
-    // }
 
     private async git(path: string, args: string[]): Promise<string> {
         const {stdout} = await execFileAsync(

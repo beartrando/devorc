@@ -260,7 +260,7 @@ export class Cli {
         const statuses = this.gitService.getRepositoryStatuses();
 
         const table = new Table({
-            head: ['Repository', 'Branch', 'WorkingTree', 'Origin'],
+            head: ['Affected', 'Repository', 'Branch', 'WorkingTree', 'Origin'],
             chars: {
                 mid: '',
                 'left-mid': '',

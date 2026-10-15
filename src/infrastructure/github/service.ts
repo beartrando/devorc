@@ -1,6 +1,7 @@
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import GitService from "../git/service";
+import BranchName from "../git/branch/value-objects/branch-name.vo";
 
 const execFileAsync = promisify(execFile);
 
@@ -21,8 +22,44 @@ export class GithubService {
     }
 
     async execute(args: string[]) {
-        const { stdout } = await execFileAsync('gh', args);
+        const {stdout} = await execFileAsync('gh', args);
         return stdout.trim();
+    }
+
+    async createOrUpdatePullRequests(
+        repos: Set<string>,
+        branch: BranchName,
+    ): Promise<string[]> {
+        const pullRequests: string[] = [];
+
+        for (const repo of repos) {
+            const existingPr = await this.execute([
+                'pr', 'list',
+                '--head', branch.value,
+                '--base', 'dev',
+                '--repo', repo,
+                '--json', 'url',
+                '--jq', '.[0].url // empty',
+            ]);
+
+            if (existingPr.trim()) {
+                pullRequests.push(existingPr.trim());
+                continue;
+            }
+
+            const url = await this.execute([
+                'pr', 'create',
+                '--head', branch.value,
+                '--base', 'dev',
+                '--repo', repo,
+                '--title', branch.value,
+                '--body', '',
+            ]);
+
+            pullRequests.push(url.trim());
+        }
+
+        return pullRequests;
     }
 
     async createIssue(title: string): Promise<string> {
