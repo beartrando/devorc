@@ -70,8 +70,8 @@ export class GitService {
 
     }
 
-    getRepositories(): Map<string, string> {
-        const repositories = new Map<string, string>([]);
+    getRepositories(affectedOnly = false): Map<string, string> {
+        const repositories = new Map<string, string>();
 
         for (const [name, path] of this.serviceRepositories) {
             repositories.set(name, path);
@@ -91,9 +91,16 @@ export class GitService {
 
         repositories.set('base', this.projectDir);
 
+        if (affectedOnly) {
+            return new Map(
+                [...repositories].filter(([name]) =>
+                    this.repositoryStatuses.get(name)?.affected,
+                ),
+            );
+        }
+
         return repositories;
     }
-
     async setBranch(name: BranchName): Promise<void> {
         await this.checkoutBranch(this.basePath, name);
     }
@@ -329,7 +336,7 @@ export class GitService {
             if (remoteBranch) {
                 await this.git(path, ['pull', 'origin', branchName.value]);
             }
-        }, this.getRepositories());
+        }, this.getRepositories(true));
     }
 
     async push(): Promise<void> {
@@ -337,28 +344,8 @@ export class GitService {
             console.log(`${name}: pushing`);
             const branchName = await this.currentBranch();
             await this.git(path, ['push', 'origin', branchName.value]);
-        }, this.getRepositories());
+        }, this.getRepositories(true));
     }
-
-
-    // async checkoutAndPull(): Promise<void> {
-    //     await this.checkoutBranches();
-    //     await this.pull();
-    // }
-    //
-    // async park(
-    //     message?: string,
-    // ): Promise<void> {
-    //     const branchName = await this.getBaseBranch();
-    //
-    //     message = message || branchName.value;
-    //
-    //     await this.commitAndPush(message);
-    //
-    //     this.setBranch(BranchName.create(DEFAULT_BRANCH_NAME));
-    //     await this.checkoutBranches();
-    //     await this.pull();
-    // }
 
     private async git(path: string, args: string[]): Promise<string> {
         const {stdout} = await execFileAsync(
