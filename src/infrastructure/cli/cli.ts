@@ -6,12 +6,12 @@ import IssueFlushUseCase from '../../application/use-cases/devorc/issue/issue-fl
 import IssueSelectUseCase from '../../application/use-cases/devorc/issue/issue-select';
 import ParkUseCase from '../../application/use-cases/devorc/park';
 import PullUseCase from '../../application/use-cases/devorc/pull';
-import PushUseCase from '../../application/use-cases/devorc/push';
 import IssueCreateUseCase from '../../application/use-cases/devorc/issue/issue-create';
 import GitService from '../git/service';
 import Table from 'cli-table3';
 import CalculateStatusUseCase from "../../application/use-cases/devorc/calculate-status";
 import RefreshStatusUseCase from "../../application/use-cases/devorc/refresh-status";
+import IssueToReviewUseCase from "../../application/use-cases/devorc/issue/issue-to-review";
 
 type MenuItem = {
     label: string;
@@ -44,8 +44,8 @@ export class Cli {
             action: () => this.pull(),
         },
         {
-            label: 'Commit and push all',
-            action: () => this.push(),
+            label: 'Commit, push and create pull-requests',
+            action: () => this.issueToReview(),
         },
         {
             label: 'Park',
@@ -73,7 +73,7 @@ export class Cli {
         private readonly issueSelectUseCase: IssueSelectUseCase,
         private readonly parkUseCase: ParkUseCase,
         private readonly pullUseCase: PullUseCase,
-        private readonly pushUseCase: PushUseCase,
+        private readonly issueToReviewUseCase: IssueToReviewUseCase,
         private readonly calculateStatusUseCase: CalculateStatusUseCase,
         private readonly refreshStatusUseCase: RefreshStatusUseCase,
     ) {
@@ -119,7 +119,7 @@ export class Cli {
         const items = this.menu.map(({label}) => label);
 
         const render = async () => {
-            console.clear();
+            // console.clear();
             await this.showRepositoryStatuses();
 
             console.log('\n=== DevOrc ===\n');
@@ -239,9 +239,9 @@ export class Cli {
         await this.keypress();
     }
 
-    private async push(): Promise<void> {
+    private async issueToReview(): Promise<void> {
         console.log('wait...');
-        await this.pushUseCase.execute();
+        await this.issueToReviewUseCase.execute();
         await this.keypress();
     }
 
@@ -270,8 +270,9 @@ export class Cli {
 
         for (const [repository, status] of statuses) {
             const row = [
+                status.affected,
                 repository,
-                status.branch || '(detached HEAD)',
+                status.branch.value || '(detached HEAD)',
                 status.workingTree,
                 status.origin,
             ];

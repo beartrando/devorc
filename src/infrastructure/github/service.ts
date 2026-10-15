@@ -19,67 +19,72 @@ export class GithubService {
         return this.repo;
     }
 
-    async execute(args: string[]) {
-        const { stdout } = await execFileAsync('gh', args);
-        return stdout.trim();
-    }
-
-    async createIssue(title: string): Promise<string> {
-        const result = await this.execute([
-            'issue', 'create',
-            '--title', title,
-            '--repo', await this.gitService.getProjectRepo(),
-            '--body', '',
-        ]);
-        return result;
-    }
-
-    async createPullRequest(title: string, base: string) {
-        return this.execute([
-            'pr', 'create',
-            '--title', title,
-            '--base', base,
-        ]);
-    }
-
-    async pullRequestExists(branch: string) {
-        const result = await this.execute([
-            'pr', 'list',
-            '--head', branch,
-            '--json', 'number',
-        ]);
-
-        return JSON.parse(result).length > 0;
-    }
-
-    async listPullRequests() {
-        return this.execute([
-            'pr', 'list',
-            '--json', 'number,title,state,url,headRefName,baseRefName',
-        ]);
-    }
-
-    async listIssues() {
-        return this.execute([
-            'issue', 'list',
-            '--json', 'number,title,state,url,labels',
-        ]);
-    }
-
-    async moveIssue(
-        projectId: string,
-        itemId: string,
-        fieldId: string,
-        optionId: string,
-    ) {
-        return this.execute([
-            'project', 'item-edit',
-            '--id', itemId,
-            '--project-id', projectId,
-            '--field-id', fieldId,
-            '--single-select-option-id', optionId,
-        ]);
-    }
+    // async createOrUpdatePullRequests() {
+    //     const { stdout } = await execFileAsync('gh', args);
+    //     return stdout.trim();
+    // }
+    //
+    // async execute(args: string[]) {
+    //     const { stdout } = await execFileAsync('gh', args);
+    //     return stdout.trim();
+    // }
+    //
+    // async createIssue(title: string): Promise<string> {
+    //     const result = await this.execute([
+    //         'issue', 'create',
+    //         '--title', title,
+    //         '--repo', await this.gitService.getProjectRepo(),
+    //         '--body', '',
+    //     ]);
+    //     return result;
+    // }
+    //
+    // async createPullRequest(title: string, base: string) {
+    //     return this.execute([
+    //         'pr', 'create',
+    //         '--title', title,
+    //         '--base', base,
+    //     ]);
+    // }
+    //
+    // async pullRequestExists(branch: string) {
+    //     const result = await this.execute([
+    //         'pr', 'list',
+    //         '--head', branch,
+    //         '--json', 'number',
+    //     ]);
+    //
+    //     return JSON.parse(result).length > 0;
+    // }
+    //
+    // async listPullRequests() {
+    //     return this.execute([
+    //         'pr', 'list',
+    //         '--json', 'number,title,state,url,headRefName,baseRefName',
+    //     ]);
+    // }
+    //
+    // async listIssues() {
+    //     return this.execute([
+    //         'issue', 'list',
+    //         '--json', 'number,title,state,url,labels',
+    //     ]);
+    // }
+    //
+    // async moveIssue(
+    //     projectId: string,
+    //     itemId: string,
+    //     fieldId: string,
+    //     optionId: string,
+    // ) {
+    //     return this.execute([
+    //         'project', 'item-edit',
+    //         '--id', itemId,
+    //         '--project-id', projectId,
+    //         '--field-id', fieldId,
+    //         '--single-select-option-id', optionId,
+    //     ]);
+    // }
 }
 
 export default GithubService;

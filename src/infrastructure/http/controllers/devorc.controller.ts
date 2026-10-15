@@ -5,7 +5,7 @@ import IssueFlushUseCase from "../../../application/use-cases/devorc/issue/issue
 import IssueSelectUseCase from "../../../application/use-cases/devorc/issue/issue-select";
 import ParkUseCase from "../../../application/use-cases/devorc/park";
 import PullUseCase from "../../../application/use-cases/devorc/pull";
-import PushUseCase from "../../../application/use-cases/devorc/push";
+import IssueToReviewUseCase from "../../../application/use-cases/devorc/issue/issue-to-review";
 
 export class DevorcController {
 
@@ -26,8 +26,8 @@ export class DevorcController {
     pull = wrapper(async () => {
         return await this.pullUseCase.execute();
     });
-    push = wrapper(async () => {
-        return await this.pushUseCase.execute();
+    issueToReview = wrapper(async () => {
+        return await this.issueToReviewUseCase.execute();
     });
     refreshStatus = wrapper(async () => {
         return await this.refreshStatusUseCase.execute();
@@ -39,7 +39,7 @@ export class DevorcController {
         private readonly issueSelectUseCase: IssueSelectUseCase,
         private readonly parkUseCase: ParkUseCase,
         private readonly pullUseCase: PullUseCase,
-        private readonly pushUseCase: PushUseCase,
+        private readonly issueToReviewUseCase: IssueToReviewUseCase,
         private readonly refreshStatusUseCase: RefreshStatusUseCase,
     ) {
     }

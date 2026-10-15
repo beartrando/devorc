@@ -12,9 +12,9 @@ export class IssueCreateUseCase {
     }
 
     async execute(title: string): Promise<void> {
-        const issueId = await this.githubService.createIssue(title);
-        const brancName = this.gitService.createBranchName(issueId, title)
-        await this.gitService.checkoutBaseBranch(brancName);
+        // const issueId = await this.githubService.createIssue(title);
+        // const brancName = this.gitService.createBranchName(issueId, title)
+        // await this.gitService.checkoutBaseBranch(brancName);
     }
 }
 

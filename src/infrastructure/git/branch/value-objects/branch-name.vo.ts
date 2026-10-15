@@ -26,6 +26,10 @@ export class BranchName {
     equals(other: BranchName): boolean {
         return this.value === other.value;
     }
+
+    isDefault(): boolean {
+        return this.value == DEFAULT_BRANCH_NAME;
+    }
 }
 
 export default BranchName;

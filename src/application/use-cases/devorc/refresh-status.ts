@@ -13,7 +13,7 @@ export class RefreshStatusUseCase {
 
 
     async execute(): Promise<void> {
-        await this.gitService.refreshRepositoryStatuses();
+        // await this.gitService.refreshRepositoryStatuses();
     }
 }
 

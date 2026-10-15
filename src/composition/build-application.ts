@@ -15,7 +15,7 @@ import DevorcController from "../infrastructure/http/controllers/devorc.controll
 import IssueFlushUseCase from "../application/use-cases/devorc/issue/issue-flush";
 import IssueSelectUseCase from "../application/use-cases/devorc/issue/issue-select";
 import ParkUseCase from "../application/use-cases/devorc/park";
-import PushUseCase from "../application/use-cases/devorc/push";
+import IssueToReviewUseCase from "../application/use-cases/devorc/issue/issue-to-review";
 import IssueCreateUseCase from "../application/use-cases/devorc/issue/issue-create";
 import RefreshStatusUseCase from "../application/use-cases/devorc/refresh-status";
 import PullUseCase from "../application/use-cases/devorc/pull";
@@ -47,7 +47,7 @@ const issueFlushUseCase = new IssueFlushUseCase(githubService, gitService);
 const issueSelectUseCase = new IssueSelectUseCase(githubService, gitService);
 const parkUseCase = new ParkUseCase(githubService, gitService);
 const pullUseCase = new PullUseCase(githubService, gitService);
-const pushUseCase = new PushUseCase(githubService, gitService);
+const issueToReviewUseCase = new IssueToReviewUseCase(githubService, gitService);
 const refreshStatusUseCase = new RefreshStatusUseCase(githubService, gitService);
 const calculateStatusUseCase = new CalculateStatusUseCase(githubService, gitService);
 
@@ -57,7 +57,7 @@ const devorcController = new DevorcController(
     issueSelectUseCase,
     parkUseCase,
     pullUseCase,
-    pushUseCase,
+    issueToReviewUseCase,
     refreshStatusUseCase,
 );
 
@@ -86,7 +86,7 @@ export function buildCli(): Cli {
         issueSelectUseCase,
         parkUseCase,
         pullUseCase,
-        pushUseCase,
+        issueToReviewUseCase,
         calculateStatusUseCase,
         refreshStatusUseCase
     );

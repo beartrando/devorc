@@ -1,10 +1,11 @@
 import ProjectId from "../project/value-objects/project-id.vo";
 import PullRequestId from "../pull-request/value-objects/pull-requet-id.vo";
 import RepositoryId from "../repository/value-objects/repository-id.vo";
+import IssueId from "./value-objects/issue-id.vo";
 
 
 export type IssueEntityProps = {
-    id: IssueIdId;
+    id: IssueId;
     projectIds: ProjectId[];
     pullRequestIds: PullRequestId[];
     repositoryIds: RepositoryId[];
@@ -12,7 +13,7 @@ export type IssueEntityProps = {
 
 export class IssueEntity {
     constructor(
-        readonly id: IssueIdId,
+        readonly id: IssueId,
         readonly projectIds: ProjectId[],
         readonly pullRequestIds: PullRequestId[],
         readonly repositoryIds: RepositoryId[],
