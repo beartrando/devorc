@@ -238,12 +238,11 @@ export class GitService {
 
     async checkoutBranches(branchName?: BranchName): Promise<void> {
         branchName ??= await this.getBranch();
-        console.log(branchName);
         const repositories = this.getRepositories();
         const errors: string[] = [];
 
         for (const [name, path] of repositories) {
-            console.log(name);
+            console.log(name, ': checkout to', branchName.value);
             try {
                 await this.checkoutBranch(path, branchName);
             } catch (error) {

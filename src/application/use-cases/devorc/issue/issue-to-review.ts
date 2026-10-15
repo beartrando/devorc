@@ -1,5 +1,6 @@
 import GithubService from "../../../../infrastructure/github/service";
 import GitService from "../../../../infrastructure/git/service";
+import logger from "@shared/logger";
 
 export class IssueToReviewUseCase {
 
@@ -22,6 +23,7 @@ export class IssueToReviewUseCase {
 
         const repos = this.gitService.getListOfAffectedRepos();
 
+        logger.log(repos);
         // const result = await this.githubService.createOrUpdatePullRequests(repos, branchName);
         // console.log(result);
 
