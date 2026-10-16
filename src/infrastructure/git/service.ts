@@ -359,7 +359,7 @@ export class GitService {
         }, this.getRepositories());
     }
 
-    async pull(): Promise<void> {
+    async pull(affectedOnly = false): Promise<void> {
         await this.executeForAll(async (name, path) => {
             console.log(`${name}: pulling`);
             if (!this.isCleanStage(path)) {
@@ -390,7 +390,7 @@ export class GitService {
                     await this.git(path, ['pull', 'origin', branchName.value]);
                 }
             }
-        }, this.getRepositories(true));
+        }, this.getRepositories(affectedOnly));
     }
 
     async push(): Promise<void> {
