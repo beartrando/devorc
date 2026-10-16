@@ -227,7 +227,7 @@ export class GitService {
     }
 
     async checkoutBranch(path: string, branchName: BranchName): Promise<void> {
-        if (!this.isCleanStage(path)) {
+        if (!await this.isCleanStage(path)) {
             return;
         }
 
@@ -293,7 +293,7 @@ export class GitService {
     getListOfAffectedRepos(): Set<string> {
         return new Set(
             [...this.repositoryStatuses]
-                .filter(([, status]) => status.affected)
+                .filter(([, status]) => status.affected && !status.branch.isDefault())
                 .map(([repo]) => repo),
         );
     }
@@ -311,20 +311,67 @@ export class GitService {
         const repos = new Set<string>();
 
         for (const path of paths) {
-            const remote = (await this.git(path, [
-                'remote',
-                'get-url',
-                'origin',
-            ])).trim();
+            const slug = await this.getRepoSlug(path);
 
-            const match = remote.match(/github\.com[:/]([^/]+\/[^/.]+?)(?:\.git)?$/);
-
-            if (match) {
-                repos.add(match[1]);
+            if (slug) {
+                repos.add(slug);
             }
         }
 
         return repos;
+    }
+
+    async getRepoSlug(path: string): Promise<string | null> {
+        const remote = (await this.git(path, [
+            'remote',
+            'get-url',
+            'origin',
+        ])).trim();
+
+        const match = remote.match(/github\.com[:/]([^/]+\/[^/.]+?)(?:\.git)?$/);
+
+        return match ? match[1] : null;
+    }
+
+    async getRepositoryPath(repo: string): Promise<string | null> {
+        for (const [, path] of this.getRepositories()) {
+            if (await this.getRepoSlug(path) === repo) {
+                return path;
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * Есть ли коммиты в удалённой ветке `head` относительно удалённой ветки `base`.
+     * Сравниваются именно удалённые (origin) ветки — то же, что проверяет GitHub при создании PR.
+     * Если удалённой ветки `head` нет, сравнивать нечего — возвращаем false.
+     */
+    async hasDiff(path: string, base: BranchName, head: BranchName): Promise<boolean> {
+        const baseRef = `origin/${base.value}`;
+        const headRef = `origin/${head.value}`;
+
+        await this.git(path, ['fetch', 'origin', base.value]);
+
+        const remoteHead = await this.git(path, [
+            'branch',
+            '-r',
+            '--list',
+            headRef,
+        ]);
+
+        if (!remoteHead.trim()) {
+            return false;
+        }
+
+        const diff = await this.git(path, [
+            'diff',
+            '--name-only',
+            `${baseRef}...${headRef}`,
+        ]);
+
+        return Boolean(diff.trim());
     }
 
     async executeForAll(
@@ -343,6 +390,15 @@ export class GitService {
         message = message || branchName.value;
 
         await this.executeForAll(async (name, path) => {
+            const currentBranch = await this.currentBranch(path);
+
+            if (currentBranch.isDefault()) {
+                console.log(
+                    `${name}: on default branch "${currentBranch.value}", skip commit`,
+                );
+                return;
+            }
+
             await this.git(path, ['add', '-A']);
 
             const staged = await this.git(path, [
@@ -362,7 +418,7 @@ export class GitService {
     async pull(affectedOnly = false): Promise<void> {
         await this.executeForAll(async (name, path) => {
             console.log(`${name}: pulling`);
-            if (!this.isCleanStage(path)) {
+            if (!await this.isCleanStage(path)) {
                 console.log(`${name}: skipped (working tree is dirty)`);
                 return;
             }
@@ -395,8 +451,16 @@ export class GitService {
 
     async push(): Promise<void> {
         await this.executeForAll(async (name, path) => {
-            console.log(`${name}: pushing`);
             const branchName = await this.getBranch(path);
+
+            if (branchName.isDefault()) {
+                console.log(
+                    `${name}: on default branch "${branchName.value}", skip push`,
+                );
+                return;
+            }
+
+            console.log(`${name}: pushing`);
             await this.git(path, ['push', 'origin', branchName.value]);
         }, this.getRepositories(true));
     }

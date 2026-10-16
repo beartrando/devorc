@@ -1,7 +1,7 @@
 import {execFile} from 'node:child_process';
 import {promisify} from 'node:util';
 import GitService from "../git/service";
-import BranchName from "../git/branch/value-objects/branch-name.vo";
+import BranchName, {DEFAULT_BRANCH_NAME} from "../git/branch/value-objects/branch-name.vo";
 
 const execFileAsync = promisify(execFile);
 
@@ -31,9 +31,27 @@ export class GithubService {
         branch: BranchName,
     ): Promise<string[]> {
         const pullRequests: string[] = [];
+        const base = BranchName.create(DEFAULT_BRANCH_NAME);
 
         for (const repo of repos) {
             console.log(repo, ': create PR.')
+
+            const path = await this.gitService.getRepositoryPath(repo);
+
+            if (!path) {
+                console.log(`${repo}: local repository not found, skip.`);
+                continue;
+            }
+
+            const hasDiff = await this.gitService.hasDiff(path, base, branch);
+
+            if (!hasDiff) {
+                console.log(
+                    `${repo}: no diff between ${base.value} and ${branch.value}, skip PR.`,
+                );
+                continue;
+            }
+
             const existingPr = await this.execute([
                 'pr', 'list',
                 '--head', branch.value,
