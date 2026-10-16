@@ -22,8 +22,8 @@ export class GitService {
 
     private readonly projectDir: string;
 
-    private extraRepositoriesEnabled = false;
-    private modulesRepositoriesEnabled = false;
+    private extraRepositoriesEnabled = true;
+    private modulesRepositoriesEnabled = true;
 
     constructor(config: {
         projectDir: string;
