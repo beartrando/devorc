@@ -30,7 +30,11 @@ export class GitService {
         gitServiceRepos: string[];
         gitExtraRepos: string[];
         gitModuleRepos: string[];
+        extraReposEnabledByDefault: boolean,
+        moduleReposEnabledByDefault: boolean,
     }) {
+        this.extraRepositoriesEnabled = config.extraReposEnabledByDefault;
+        this.modulesRepositoriesEnabled = config.moduleReposEnabledByDefault;
         this.projectDir = config.projectDir;
 
         for (const repo of config.gitServiceRepos) {
