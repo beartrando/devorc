@@ -16,6 +16,7 @@ export class IssueSelectUseCase {
         const branchName = this.gitService.createBranchName(issueId, title);
         await this.gitService.fetch();
         await this.gitService.checkoutBranches(branchName);
+        await this.gitService.commit();
         await this.gitService.pull(true);
     }
 }
