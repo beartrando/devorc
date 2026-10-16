@@ -239,19 +239,24 @@ export class GitService {
             'branch',
             '-r',
             '--list',
-            branchName.value,
+            '*/' + branchName.value,
         ]);
+
+        // console.log('branch=', branchName.value);
+        // console.log('branches=', branches);
+        // console.log('remoteBranches=', remoteBranches);
 
         if (branches) {
             await this.git(path, ['switch', branchName.value]);
+            return;
         }
 
         if (remoteBranches) {
             if (!branches) {
-                await this.git(path, ['checkout -b ', branchName.value]);
+                await this.git(path, ['checkout', '-b', branchName.value]);
+            } else {
+                await this.git(path, ['switch', '--track', 'origin/' + branchName.value]);
             }
-
-            await this.git(path, ['pull', 'origin', branchName.value]);
         }
     }
 
@@ -261,6 +266,7 @@ export class GitService {
         const errors: string[] = [];
 
         for (const [name, path] of repositories) {
+
             console.log(name, ': checkout to', branchName.value);
             try {
                 await this.checkoutBranch(path, branchName);
@@ -352,17 +358,12 @@ export class GitService {
     async pull(): Promise<void> {
         await this.executeForAll(async (name, path) => {
             console.log(`${name}: pulling`);
-
-            const branchName = await this.currentBranch(path);
-            const workingTree = await this.git(path, [
-                'status',
-                '--porcelain',
-            ]);
-
-            if (workingTree) {
+            if (!this.isCleanStage(path)) {
                 console.log(`${name}: skipped (working tree is dirty)`);
                 return;
             }
+
+            const branchName = await this.currentBranch(path);
 
             const remoteBranch = await this.git(path, [
                 'ls-remote',
@@ -370,6 +371,9 @@ export class GitService {
                 'origin',
                 `refs/heads/${branchName.value}`,
             ]);
+
+            // console.log('branch=', branchName.value);
+            // console.log('remoteBranch=', remoteBranch);
 
             if (remoteBranch) {
                 if (path === '.') {
@@ -398,7 +402,7 @@ export class GitService {
             console.log(`${name}: fetch`);
             const branchName = await this.getBranch(path);
             await this.git(path, ['fetch']);
-        }, this.getRepositories(true));
+        }, this.getRepositories());
     }
 
     private async git(path: string, args: string[]): Promise<string> {

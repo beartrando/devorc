@@ -119,7 +119,7 @@ export class Cli {
         const items = this.menu.map(({label}) => label);
 
         const render = async () => {
-            console.clear();
+            // console.clear();
             await this.showRepositoryStatuses();
 
             console.log('\n=== DevOrc ===\n');
@@ -229,6 +229,7 @@ export class Cli {
 
     private async selectIssue(): Promise<void> {
         const id = await this.rl.question('Enter issue id: ');
+        console.log('select issue');
         console.log('wait...');
         await this.issueSelectUseCase.execute(id);
         await this.keypress();
