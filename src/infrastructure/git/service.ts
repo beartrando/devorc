@@ -227,10 +227,6 @@ export class GitService {
     }
 
     async checkoutBranch(path: string, branchName: BranchName): Promise<void> {
-        if (!await this.isCleanStage(path)) {
-            return;
-        }
-
         const currentBranch = await this.currentBranch(path);
 
         const branches = await this.git(path, [
@@ -256,12 +252,18 @@ export class GitService {
         }
 
         if (remoteBranches) {
-            if (!branches) {
-                await this.git(path, ['checkout', '-b', branchName.value]);
+            if (branches) {
+                await this.git(path, ['pull', 'origin', branchName.value]);
             } else {
                 await this.git(path, ['switch', '--track', 'origin/' + branchName.value]);
             }
+            return;
         }
+
+        if (await this.isCleanStage(path)) {
+            return;
+        }
+        await this.git(path, ['checkout', '-b', branchName.value]);
     }
 
     async checkoutBranches(branchName?: BranchName): Promise<void> {
