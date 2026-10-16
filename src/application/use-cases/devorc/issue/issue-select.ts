@@ -14,7 +14,9 @@ export class IssueSelectUseCase {
     async execute(issueId: string): Promise<void> {
         const title = await this.githubService.getIssueTitle(issueId);
         const branchName = this.gitService.createBranchName(issueId, title);
+        await this.gitService.fetch();
         await this.gitService.checkoutBranches(branchName);
+        await this.gitService.pull();
     }
 }
 

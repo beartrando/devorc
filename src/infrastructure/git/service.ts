@@ -213,7 +213,20 @@ export class GitService {
         ]));
     }
 
+    async isCleanStage(path: string): Promise<boolean> {
+        return !await this.git(path, [
+            'status',
+            '--porcelain',
+            '--ignore-submodules=all',
+        ]);
+
+    }
+
     async checkoutBranch(path: string, branchName: BranchName): Promise<void> {
+        if (!this.isCleanStage(path)) {
+            return;
+        }
+
         const currentBranch = await this.currentBranch(path);
 
         const branches = await this.git(path, [
@@ -222,17 +235,23 @@ export class GitService {
             branchName.value,
         ]);
 
+        const remoteBranches = await this.git(path, [
+            'branch',
+            '-r',
+            '--list',
+            branchName.value,
+        ]);
+
         if (branches) {
             await this.git(path, ['switch', branchName.value]);
         }
 
-        const changes = await this.git(path, [
-            'status',
-            '--porcelain',
-        ]);
+        if (remoteBranches) {
+            if (!branches) {
+                await this.git(path, ['checkout -b ', branchName.value]);
+            }
 
-        if (changes && !currentBranch.equals(branchName) && !branches) {
-            await this.git(path, ['checkout', '-b', branchName.value]);
+            await this.git(path, ['pull', 'origin', branchName.value]);
         }
     }
 
@@ -353,7 +372,15 @@ export class GitService {
             ]);
 
             if (remoteBranch) {
-                await this.git(path, ['pull', 'origin', branchName.value]);
+                if (path === '.') {
+                    await this.git(path, [
+                        '-c', 'submodule.recurse=false',
+                        'pull', '--no-recurse-submodules',
+                        'origin', branchName.value,
+                    ]);
+                } else {
+                    await this.git(path, ['pull', 'origin', branchName.value]);
+                }
             }
         }, this.getRepositories(true));
     }
@@ -363,6 +390,14 @@ export class GitService {
             console.log(`${name}: pushing`);
             const branchName = await this.getBranch(path);
             await this.git(path, ['push', 'origin', branchName.value]);
+        }, this.getRepositories(true));
+    }
+
+    async fetch(): Promise<void> {
+        await this.executeForAll(async (name, path) => {
+            console.log(`${name}: fetch`);
+            const branchName = await this.getBranch(path);
+            await this.git(path, ['fetch']);
         }, this.getRepositories(true));
     }
 
