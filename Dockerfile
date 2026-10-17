@@ -1,7 +1,6 @@
 ARG VERSION=dev
 
 # ---------- BASE ----------
-
 FROM node:22-slim AS base
 
 WORKDIR /usr/src/app

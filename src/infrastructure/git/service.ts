@@ -260,7 +260,7 @@ export class GitService {
             return;
         }
 
-        if (await this.isCleanStage(path)) {
+        if (await this.isCleanStage(path) && (path !== '.')) {
             return;
         }
         await this.git(path, ['checkout', '-b', branchName.value]);
